@@ -20,6 +20,17 @@ Not Open
 
 ====================
 todo:
+
 Learn markdown
+
 Clean up coffeescript/javascript
+
 Make pretty
+
+Add valut items to the list
+
+Remove other items (ships and stuff)
+
+Add a opps the code broke. Maybe they updated the site?
+
+Add a check to see if its already running. 

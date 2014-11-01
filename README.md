@@ -16,3 +16,10 @@ Open
 
 Not Open
 ![not open](http://sbeckeriv.github.io/destiny-upgrade-counts/close.png)
+
+
+====================
+todo:
+Learn markdown
+Clean up coffeescript/javascript
+Make pretty

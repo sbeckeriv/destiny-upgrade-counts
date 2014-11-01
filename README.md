@@ -1,7 +1,7 @@
 destiny-upgrade-counts
-======================
+====================== 
 
-Bookmarklet to dispay upgrade material counts 
+Bookmarklet to display upgrade material counts on the character page. 
 ======================
 I cant figure out how to create the link with markdown. Sorry.
 
@@ -27,7 +27,7 @@ Clean up coffeescript/javascript
 
 Make pretty
 
-Add valut items to the list
+Add vault items to the list
 
 Remove other items (ships and stuff)
 

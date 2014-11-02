@@ -27,14 +27,18 @@ class Upgrader
     @items = ko.observableArray()
     @totals = new Totals
     @setIDs()
-    @processItems()
     @error = ko.observable(false)
+    try
+      @processItems()
+    catch error
+      @error("There was a problem loading the site: #{error}")
 
   processItems: ->
     # use bungie js model to key the values. Just a double loop of arrays
     for item in tempModel.inventory.buckets.Equippable
       for object in item.items
-        @addItem(object.itemHash, object.itemInstanceId, {"instance": object, "data": DEFS["items"][object.itemHash]})
+        data = DEFS["items"][object.itemHash]
+        @addItem(object.itemInstanceId, {"instance": object, "data": data, "bucket": DEFS['buckets'][data.bucketTypeHash]})
 
   setIDs: ->
     #simple regex.
@@ -49,7 +53,7 @@ class Upgrader
       (items[item[key]] or= []).push item
     items
 
-  addItem: (hashid, iiid, base_object) =>
+  addItem: (iiid, base_object) =>
     url = @baseInventoryUrl.replace("ACCOUNT_ID_SUB", @accountID).replace("CHARACTER_ID_SUB", @characterID).replace("IIID_SUB", iiid)
 
     $.ajax({
@@ -76,7 +80,7 @@ class Upgrader
       base_object["json"] = item_json
       base_object["material"] = materials
       clean_list = {}
-      #like ruby's inject. count for each material
+      #count for each material
       #store the over all total too. We could count this on the way out as well.
       for name, ms of materials
         total = 0
@@ -89,12 +93,18 @@ class Upgrader
       @items.push(new Item(base_object))
 
 window.upgrader = new Upgrader
+
 unless $('.upgrader')[0]
   $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'>
     <div style='height:20px'>
-      <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a>
+      <!-- ko ifnot: error -->
+        <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a>
+      <!-- /ko -->
+      <!-- ko if: error -->
+        <span data-bind='text: error'></span>
+      <!-- /ko -->
     </div>
-    <span id='upgrader-data'>
+    <span id='upgrader-data' data-bind='ifnot: error'>
       <ul class='totals' data-bind='foreach: totals.list()'>
         <li data-bind=\"text: $data[0]+': '+$data[1]\"></li>
       </ul>
@@ -102,6 +112,7 @@ unless $('.upgrader')[0]
         <!-- ko if: material_array()[0] -->
           <li class='item' style='border-bottom: solid 1px'>
             <span data-bind='text: data.itemName()'></span>
+            <span data-bind='text: \": \"+bucket.bucketName()'></span>
             <ul data-bind='foreach: material_array()'>
               <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li>
             </ul>

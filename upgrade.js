@@ -48,17 +48,23 @@
 
     function Upgrader() {
       this.addItem = __bind(this.addItem, this);
+      var error;
       this.accountID = null;
       this.characterID = null;
       this.items = ko.observableArray();
       this.totals = new Totals;
       this.setIDs();
-      this.processItems();
       this.error = ko.observable(false);
+      try {
+        this.processItems();
+      } catch (_error) {
+        error = _error;
+        this.error("There was a problem loading the site: " + error);
+      }
     }
 
     Upgrader.prototype.processItems = function() {
-      var item, object, _i, _len, _ref, _results;
+      var data, item, object, _i, _len, _ref, _results;
       _ref = tempModel.inventory.buckets.Equippable;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -69,9 +75,11 @@
           _results1 = [];
           for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
             object = _ref1[_j];
-            _results1.push(this.addItem(object.itemHash, object.itemInstanceId, {
+            data = DEFS["items"][object.itemHash];
+            _results1.push(this.addItem(object.itemInstanceId, {
               "instance": object,
-              "data": DEFS["items"][object.itemHash]
+              "data": data,
+              "bucket": DEFS['buckets'][data.bucketTypeHash]
             }));
           }
           return _results1;
@@ -97,7 +105,7 @@
       return items;
     };
 
-    Upgrader.prototype.addItem = function(hashid, iiid, base_object) {
+    Upgrader.prototype.addItem = function(iiid, base_object) {
       var url;
       url = this.baseInventoryUrl.replace("ACCOUNT_ID_SUB", this.accountID).replace("CHARACTER_ID_SUB", this.characterID).replace("IIID_SUB", iiid);
       return $.ajax({
@@ -168,7 +176,7 @@
   window.upgrader = new Upgrader;
 
   if (!$('.upgrader')[0]) {
-    $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'> <div style='height:20px'> <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a> </div> <span id='upgrader-data'> <ul class='totals' data-bind='foreach: totals.list()'> <li data-bind=\"text: $data[0]+': '+$data[1]\"></li> </ul> <ul class='totals' data-bind='foreach: items'> <!-- ko if: material_array()[0] --> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: data.itemName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
+    $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'> <div style='height:20px'> <!-- ko ifnot: error --> <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <ul class='totals' data-bind='foreach: totals.list()'> <li data-bind=\"text: $data[0]+': '+$data[1]\"></li> </ul> <ul class='totals' data-bind='foreach: items'> <!-- ko if: material_array()[0] --> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: data.itemName()'></span> <span data-bind='text: \": \"+bucket.bucketName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
     ko.applyBindings(window.upgrader, $('.upgrader')[0]);
   }
 

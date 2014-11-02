@@ -18,6 +18,13 @@ Not Open
 ![not open](http://sbeckeriv.github.io/destiny-upgrade-counts/close.png)
 ====================
 
+Playing
+===================
+Inspect the data
+```
+window.upgrader
+```
+
 todo:
 
 Learn markdown

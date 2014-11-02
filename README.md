@@ -23,11 +23,16 @@ Playing
 Inspect the data
 ```
 window.upgrader
+window.upgrader.items()
 ```
+If you get a function when you expected something its most likely a knockout observerable. read more http://knockoutjs.com/documentation/introduction.html
 
-todo:
+todo
+===================
 
 Learn markdown
+
+Comments
 
 Clean up coffeescript/javascript
 

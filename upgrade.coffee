@@ -20,8 +20,7 @@ class Upgrader
   constructor: ->
     @accountID = null
     @characterID = null
-    @items = ko.observable({})
-    @ko_items = ko.observableArray()
+    @items = ko.observableArray()
     @totals = new Totals
     @setIDs()
     @processItems()
@@ -29,16 +28,12 @@ class Upgrader
   processItems: ->
     for item in tempModel.inventory.buckets.Equippable
       for object in item.items
-        @items()[object.itemHash] = {"instance": object, "data": DEFS["items"][object.itemHash]}
-        @addItem(object.itemHash, object.itemInstanceId)
+        @addItem(object.itemHash, object.itemInstanceId, {"instance": object, "data": DEFS["items"][object.itemHash]})
 
   setIDs: ->
     matches = window.location.pathname.match(/(.+)\/(\d+)\/(\d+)/)
     @accountID = matches[2]
     @characterID = matches[3]
-
-  base_json: ->
-    window.DEFS
 
   group_by: (array, key) ->
     items = {}
@@ -46,8 +41,9 @@ class Upgrader
       (items[item[key]] or= []).push item
     items
 
-  addItem: (hashid, iiid) =>
+  addItem: (hashid, iiid, base_object) =>
     url = @baseInventoryUrl.replace("ACCOUNT_ID_SUB", @accountID).replace("CHARACTER_ID_SUB", @characterID).replace("IIID_SUB", iiid)
+
     $.ajax({
       url: url, type: "GET",
       beforeSend: (xhr) ->
@@ -61,8 +57,8 @@ class Upgrader
           material["name"] = item_json["Response"]["definitions"]["items"][material.itemHash]["itemName"]
           material_list.push(material)
       materials = @group_by(material_list, "name")
-      @items()[hashid]["json"] = item_json
-      @items()[hashid]["material"] = materials
+      base_object["json"] = item_json
+      base_object["material"] = materials
       clean_list = {}
       for name, ms of materials
         total = 0
@@ -70,12 +66,31 @@ class Upgrader
         @totals.add(name,total)
         clean_list[name] = total
       clean_array = ({name: name, total: total} for name, total of clean_list)
-      @items()[hashid]["material_names"] = clean_list
-      @items()[hashid]["material_array"] = clean_array
-      @ko_items.push(new Item(@items()[hashid]))
+      base_object["material_names"] = clean_list
+      base_object["material_array"] = clean_array
+      @items.push(new Item(base_object))
 
-upgrader = new Upgrader
+window.upgrader = new Upgrader
 
-$(".nav_top").append("<li class='upgrader level_one mail icons' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'><div style='height:20px'><a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a></div><span id='upgrader-data'><ul class='totals' data-bind='foreach: totals.list()'> <li data-bind=\"text: $data[0]+': '+$data[1]\"></li> </ul> <ul class='totals' data-bind='foreach: ko_items'> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: data.itemName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> </ul></span> </li>")
-ko.applyBindings(upgrader, $('.upgrader')[0])
+$(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'>
+  <div style='height:20px'>
+    <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a>
+  </div>
+  <span id='upgrader-data'>
+    <ul class='totals' data-bind='foreach: totals.list()'>
+      <li data-bind=\"text: $data[0]+': '+$data[1]\"></li>
+    </ul>
+    <ul class='totals' data-bind='foreach: items'>
+      <!-- ko if: material_array()[0] -->
+        <li class='item' style='border-bottom: solid 1px'>
+          <span data-bind='text: data.itemName()'></span>
+          <ul data-bind='foreach: material_array()'>
+            <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li>
+          </ul>
+        </li>
+      <!-- /ko -->
+    </ul>
+  </span>
+</li>")
 
+ko.applyBindings(window.upgrader, $('.upgrader')[0])

@@ -54,6 +54,7 @@
       this.totals = new Totals;
       this.setIDs();
       this.processItems();
+      this.error = ko.observable(false);
     }
 
     Upgrader.prototype.processItems = function() {
@@ -166,8 +167,9 @@
 
   window.upgrader = new Upgrader;
 
-  $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'> <div style='height:20px'> <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a> </div> <span id='upgrader-data'> <ul class='totals' data-bind='foreach: totals.list()'> <li data-bind=\"text: $data[0]+': '+$data[1]\"></li> </ul> <ul class='totals' data-bind='foreach: items'> <!-- ko if: material_array()[0] --> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: data.itemName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
-
-  ko.applyBindings(window.upgrader, $('.upgrader')[0]);
+  if (!$('.upgrader')[0]) {
+    $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'> <div style='height:20px'> <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a> </div> <span id='upgrader-data'> <ul class='totals' data-bind='foreach: totals.list()'> <li data-bind=\"text: $data[0]+': '+$data[1]\"></li> </ul> <ul class='totals' data-bind='foreach: items'> <!-- ko if: material_array()[0] --> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: data.itemName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
+    ko.applyBindings(window.upgrader, $('.upgrader')[0]);
+  }
 
 }).call(this);

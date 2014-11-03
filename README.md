@@ -7,9 +7,28 @@ Create a new bookmark. Use this as your url:
 ```
 javascript:(function(){s=document.createElement('script');s.type='text/javascript';s.src='http://sbeckeriv.github.io/destiny-upgrade-counts/upgrade.js?v='+parseInt(Math.random()*99999999);document.body.appendChild(s);})();
 ```
-
 On a character (logged in or out, or someone elses) click the bookmark.
 
+Greesemonkey or tampermonkey script 
+Thanks solrac214
+```
+// ==UserScript==
+// @name         Bungie Gear
+// @namespace    http://BungieGear/
+// @version      0.1
+// @description  Hope this helps ! :D
+// @author       You
+// @include      http://www.bungie.net/*
+// @grant        none
+// ==/UserScript==
+
+s=document.createElement('script');
+ s.type='text/javascript';
+ s.src='http://sbeckeriv.github.io/destiny-upgrade-counts/upgrade.js?v='+parseInt(Math.random()*99999999);
+ document.body.appendChild(s);
+```
+
+Example
 =====================
 Open
 ![open](http://sbeckeriv.github.io/destiny-upgrade-counts/open.png)

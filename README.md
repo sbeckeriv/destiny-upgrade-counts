@@ -18,7 +18,7 @@ Thanks solrac214
 // @version      0.1
 // @description  Hope this helps ! :D
 // @author       You
-// @include      https?://www.bungie.net/*
+// @include      https*://www.bungie.net/*
 // @grant        none
 // ==/UserScript==
 

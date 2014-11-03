@@ -5,11 +5,11 @@ Bookmarklet to display upgrade material counts on the character page.
 I cant figure out how to create the link with markdown. Sorry.
 Create a new bookmark. Use this as your url:
 ```
-javascript:(function(){s=document.createElement('script');s.type='text/javascript';s.src='http://sbeckeriv.github.io/destiny-upgrade-counts/upgrade.js?v='+parseInt(Math.random()*99999999);document.body.appendChild(s);})();
+javascript:(function(){s=document.createElement('script');s.type='text/javascript';s.src='//sbeckeriv.github.io/destiny-upgrade-counts/upgrade.js?v='+parseInt(Math.random()*99999999);document.body.appendChild(s);})();
 ```
 On a character (logged in or out, or someone elses) click the bookmark.
 
-Greesemonkey or tampermonkey script 
+Greesemonkey or tampermonkey script
 Thanks solrac214
 ```
 // ==UserScript==
@@ -18,13 +18,13 @@ Thanks solrac214
 // @version      0.1
 // @description  Hope this helps ! :D
 // @author       You
-// @include      http://www.bungie.net/*
+// @include      https?://www.bungie.net/*
 // @grant        none
 // ==/UserScript==
 
 s=document.createElement('script');
  s.type='text/javascript';
- s.src='http://sbeckeriv.github.io/destiny-upgrade-counts/upgrade.js?v='+parseInt(Math.random()*99999999);
+ s.src='//sbeckeriv.github.io/destiny-upgrade-counts/upgrade.js?v='+parseInt(Math.random()*99999999);
  document.body.appendChild(s);
 ```
 

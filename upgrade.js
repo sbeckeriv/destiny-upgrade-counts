@@ -44,7 +44,7 @@
   })();
 
   Upgrader = (function() {
-    Upgrader.prototype.baseInventoryUrl = "http://www.bungie.net/Platform/Destiny/1/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true";
+    Upgrader.prototype.baseInventoryUrl = window.location.protocol + "//www.bungie.net/Platform/Destiny/1/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true";
 
     function Upgrader() {
       this.addItem = __bind(this.addItem, this);

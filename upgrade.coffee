@@ -20,7 +20,7 @@ class Totals
       @names.push(name)
 
 class Upgrader
-  baseInventoryUrl: "http://www.bungie.net/Platform/Destiny/1/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true"
+  baseInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/1/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true"
   constructor: ->
     @accountID = null
     @characterID = null

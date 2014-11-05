@@ -147,7 +147,14 @@ unless $('.upgrader')[0]
     <div style='height:20px'>
       <!-- ko ifnot: error -->
         <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a>
-        <label><input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' />Include Vault</label>
+        <label><input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' />
+        <!-- ko ifnot: vaultLoaded()-->
+          Click Gear for Vault
+        <!-- /ko -->
+        <!-- ko if: vaultLoaded()-->
+          Include Vault
+        <!-- /ko -->
+        </label>
       <!-- /ko -->
       <!-- ko if: error -->
         <span data-bind='text: error'></span>

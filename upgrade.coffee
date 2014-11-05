@@ -2,6 +2,12 @@
 class Item
   constructor: (data)->
     ko.mapping.fromJS(data, {}, @)
+  displayName: ->
+    name = "#{@data.itemName()}: #{@bucket.bucketName()}"
+    name += " Vault" if @vault()
+    name
+  check_vault: ->
+    !@vault()
 #knockout object to hold the totals to update display
 class Totals
   constructor: ->
@@ -21,24 +27,65 @@ class Totals
 
 class Upgrader
   baseInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/1/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true"
+  vaultInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/1/MyAccount/Character/CHARACTER_ID_SUB/Vendor/VENDOR_ID/?lc=en&fmt=true&lcin=true&definitions=true"
   constructor: ->
     @accountID = null
     @characterID = null
     @items = ko.observableArray()
     @totals = new Totals
+    @vault_totals = new Totals
     @setIDs()
+    @vaultLoaded = ko.observable(false) # can be computed if any items have vault
+    @displayVault = ko.observable(false)
     @error = ko.observable(false)
     try
       @processItems()
+      @venderTimeout = setInterval(=>
+        @processVault()
+      , 600)
     catch error
       @error("There was a problem loading the site: #{error}")
+  total_object: ->
+    if @displayVault()
+      @vault_totals
+    else
+      @totals
+
+  processVault: ->
+    vendor_id = null
+    if DEFS.vendorDetails
+      for id, obj of DEFS.vendorDetails
+        vendor_id = id
+    if vendor_id
+      clearInterval(@venderTimeout)
+      @vaultLoaded(true)
+      url = @vaultInventoryUrl.replace("CHARACTER_ID_SUB", @characterID).replace("VENDOR_ID", vendor_id)
+      console.log(url)
+      $.ajax({
+        url: url, type: "GET",
+        beforeSend: (xhr) ->
+          #setup headers
+          #Accept Might not be needed. I noticed this was used in the bungie requests
+          xhr.setRequestHeader('Accept', "application/json, text/javascript, */*; q=0.01")
+          #This are mostly auth headers. API token and other needed values.
+          for key,value of bungieNetPlatform.getHeaders()
+            xhr.setRequestHeader(key, value)
+      }).done (item_json) =>
+        console.log(item_json)
+        for bucket in item_json["Response"]["data"]["inventoryBuckets"]
+          console.log(bucket)
+          for item in bucket.items
+            console.log(item)
+            @addItem(item.itemInstanceId, {"vault": true, "data": item_json["Response"]["definitions"]["items"][item.itemHash] ,"instance":item, "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]})
+    else
+      console.log("no vault")
 
   processItems: ->
     # use bungie js model to key the values. Just a double loop of arrays
     for item in tempModel.inventory.buckets.Equippable
       for object in item.items
         data = DEFS["items"][object.itemHash]
-        @addItem(object.itemInstanceId, {"instance": object, "data": data, "bucket": DEFS['buckets'][data.bucketTypeHash]})
+        @addItem(object.itemInstanceId, {"vault": false, "instance": object, "data": data, "bucket": DEFS['buckets'][data.bucketTypeHash]})
 
   setIDs: ->
     #simple regex.
@@ -85,7 +132,8 @@ class Upgrader
       for name, ms of materials
         total = 0
         total = total+ m.count for m in ms
-        @totals.add(name,total)
+        @vault_totals.add(name,total)
+        @totals.add(name,total) unless base_object["vault"]
         clean_list[name] = total
       clean_array = ({name: name, total: total} for name, total of clean_list)
       base_object["material_names"] = clean_list
@@ -99,20 +147,20 @@ unless $('.upgrader')[0]
     <div style='height:20px'>
       <!-- ko ifnot: error -->
         <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a>
+        <label><input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' />Include Vault</label>
       <!-- /ko -->
       <!-- ko if: error -->
         <span data-bind='text: error'></span>
       <!-- /ko -->
     </div>
     <span id='upgrader-data' data-bind='ifnot: error'>
-      <ul class='totals' data-bind='foreach: totals.list()'>
+      <ul class='totals' data-bind='foreach: total_object().list()'>
         <li data-bind=\"text: $data[0]+': '+$data[1]\"></li>
       </ul>
       <ul class='totals' data-bind='foreach: items'>
-        <!-- ko if: material_array()[0] -->
+        <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) -->
           <li class='item' style='border-bottom: solid 1px'>
-            <span data-bind='text: data.itemName()'></span>
-            <span data-bind='text: \": \"+bucket.bucketName()'></span>
+            <span data-bind='text: displayName()'></span>
             <ul data-bind='foreach: material_array()'>
               <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li>
             </ul>

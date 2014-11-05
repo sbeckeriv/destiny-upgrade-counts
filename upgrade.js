@@ -8,6 +8,19 @@
       ko.mapping.fromJS(data, {}, this);
     }
 
+    Item.prototype.displayName = function() {
+      var name;
+      name = "" + (this.data.itemName()) + ": " + (this.bucket.bucketName());
+      if (this.vault()) {
+        name += " Vault";
+      }
+      return name;
+    };
+
+    Item.prototype.check_vault = function() {
+      return !this.vault();
+    };
+
     return Item;
 
   })();
@@ -46,6 +59,8 @@
   Upgrader = (function() {
     Upgrader.prototype.baseInventoryUrl = window.location.protocol + "//www.bungie.net/Platform/Destiny/1/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true";
 
+    Upgrader.prototype.vaultInventoryUrl = window.location.protocol + "//www.bungie.net/Platform/Destiny/1/MyAccount/Character/CHARACTER_ID_SUB/Vendor/VENDOR_ID/?lc=en&fmt=true&lcin=true&definitions=true";
+
     function Upgrader() {
       this.addItem = __bind(this.addItem, this);
       var error;
@@ -53,15 +68,94 @@
       this.characterID = null;
       this.items = ko.observableArray();
       this.totals = new Totals;
+      this.vault_totals = new Totals;
       this.setIDs();
+      this.vaultLoaded = ko.observable(false);
+      this.displayVault = ko.observable(false);
       this.error = ko.observable(false);
       try {
         this.processItems();
+        this.venderTimeout = setInterval((function(_this) {
+          return function() {
+            return _this.processVault();
+          };
+        })(this), 600);
       } catch (_error) {
         error = _error;
         this.error("There was a problem loading the site: " + error);
       }
     }
+
+    Upgrader.prototype.total_object = function() {
+      if (this.displayVault()) {
+        return this.vault_totals;
+      } else {
+        return this.totals;
+      }
+    };
+
+    Upgrader.prototype.processVault = function() {
+      var id, obj, url, vendor_id, _ref;
+      vendor_id = null;
+      if (DEFS.vendorDetails) {
+        _ref = DEFS.vendorDetails;
+        for (id in _ref) {
+          obj = _ref[id];
+          vendor_id = id;
+        }
+      }
+      if (vendor_id) {
+        clearInterval(this.venderTimeout);
+        this.vaultLoaded(true);
+        url = this.vaultInventoryUrl.replace("CHARACTER_ID_SUB", this.characterID).replace("VENDOR_ID", vendor_id);
+        console.log(url);
+        return $.ajax({
+          url: url,
+          type: "GET",
+          beforeSend: function(xhr) {
+            var key, value, _ref1, _results;
+            xhr.setRequestHeader('Accept', "application/json, text/javascript, */*; q=0.01");
+            _ref1 = bungieNetPlatform.getHeaders();
+            _results = [];
+            for (key in _ref1) {
+              value = _ref1[key];
+              _results.push(xhr.setRequestHeader(key, value));
+            }
+            return _results;
+          }
+        }).done((function(_this) {
+          return function(item_json) {
+            var bucket, item, _i, _len, _ref1, _results;
+            console.log(item_json);
+            _ref1 = item_json["Response"]["data"]["inventoryBuckets"];
+            _results = [];
+            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+              bucket = _ref1[_i];
+              console.log(bucket);
+              _results.push((function() {
+                var _j, _len1, _ref2, _results1;
+                _ref2 = bucket.items;
+                _results1 = [];
+                for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+                  item = _ref2[_j];
+                  console.log(item);
+                  _results1.push(this.addItem(item.itemInstanceId, {
+                    "vault": true,
+                    "data": item_json["Response"]["definitions"]["items"][item.itemHash],
+                    "instance": item,
+                    "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]
+                  }));
+                }
+                return _results1;
+              }).call(_this));
+            }
+            return _results;
+          };
+        })(this));
+      } else {
+        return console.log("no vault");
+      }
+    };
 
     Upgrader.prototype.processItems = function() {
       var data, item, object, _i, _len, _ref, _results;
@@ -77,6 +171,7 @@
             object = _ref1[_j];
             data = DEFS["items"][object.itemHash];
             _results1.push(this.addItem(object.itemInstanceId, {
+              "vault": false,
               "instance": object,
               "data": data,
               "bucket": DEFS['buckets'][data.bucketTypeHash]
@@ -147,7 +242,10 @@
               m = ms[_k];
               total = total + m.count;
             }
-            _this.totals.add(name, total);
+            _this.vault_totals.add(name, total);
+            if (!base_object["vault"]) {
+              _this.totals.add(name, total);
+            }
             clean_list[name] = total;
           }
           clean_array = (function() {
@@ -176,7 +274,7 @@
   window.upgrader = new Upgrader;
 
   if (!$('.upgrader')[0]) {
-    $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'> <div style='height:20px'> <!-- ko ifnot: error --> <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <ul class='totals' data-bind='foreach: totals.list()'> <li data-bind=\"text: $data[0]+': '+$data[1]\"></li> </ul> <ul class='totals' data-bind='foreach: items'> <!-- ko if: material_array()[0] --> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: data.itemName()'></span> <span data-bind='text: \": \"+bucket.bucketName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
+    $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'> <div style='height:20px'> <!-- ko ifnot: error --> <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a> <label><input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' />Include Vault</label> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <ul class='totals' data-bind='foreach: total_object().list()'> <li data-bind=\"text: $data[0]+': '+$data[1]\"></li> </ul> <ul class='totals' data-bind='foreach: items'> <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) --> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: displayName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
     ko.applyBindings(window.upgrader, $('.upgrader')[0]);
   }
 

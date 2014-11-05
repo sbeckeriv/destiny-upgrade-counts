@@ -53,4 +53,6 @@ Learn markdown
 
 Make pretty
 
-Add vault items to the list
+Better vendor vault detection
+
+CSV

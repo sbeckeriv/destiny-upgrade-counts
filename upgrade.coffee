@@ -78,7 +78,11 @@ class Upgrader
       }).done (item_json) =>
         for bucket in item_json["Response"]["data"]["inventoryBuckets"]
           for item in bucket.items
-            @addItem(item.itemInstanceId, {"vault": true, "data": item_json["Response"]["definitions"]["items"][item.itemHash] ,"instance":item, "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]})
+            datas = item_json["Response"]["definitions"]["items"][item.itemHash]
+            if @ownedTotals[datas.itemName]
+              @ownedTotals.add(datas.itemName, item.stackSize)
+
+            @addItem(item.itemInstanceId, {"vault": true, "data": datas,"instance":item, "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]})
     else
 
   processItems: ->

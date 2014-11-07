@@ -134,7 +134,7 @@
           }
         }).done((function(_this) {
           return function(item_json) {
-            var bucket, item, _i, _len, _ref1, _results;
+            var bucket, datas, item, _i, _len, _ref1, _results;
             _ref1 = item_json["Response"]["data"]["inventoryBuckets"];
             _results = [];
             for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -145,9 +145,13 @@
                 _results1 = [];
                 for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
                   item = _ref2[_j];
+                  datas = item_json["Response"]["definitions"]["items"][item.itemHash];
+                  if (this.ownedTotals[datas.itemName]) {
+                    this.ownedTotals.add(datas.itemName, item.stackSize);
+                  }
                   _results1.push(this.addItem(item.itemInstanceId, {
                     "vault": true,
-                    "data": item_json["Response"]["definitions"]["items"][item.itemHash],
+                    "data": datas,
                     "instance": item,
                     "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]
                   }));

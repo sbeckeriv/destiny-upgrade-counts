@@ -23,7 +23,7 @@
 
     Item.prototype.csv = function(stats_header, material_names) {
       var count, found_stat, instace_stat, item_csv, mat_data, name, perk, perk_string, stat, stat_csv, string, _i, _j, _k, _len, _len1, _len2, _ref;
-      item_csv = [this.data.itemName()];
+      item_csv = [this.data.itemName(), this.data.itemTypeName(), this.data.tierTypeName(), this.data.qualityLevel()];
       stat_csv = [];
       for (_i = 0, _len = stats_header.length; _i < _len; _i++) {
         stat = stats_header[_i];
@@ -149,7 +149,7 @@
 
     Upgrader.prototype.itemsCSV = function() {
       var csv, data, header, id, item, mat_names, stats_header, _i, _len, _ref, _ref1;
-      header = ["Name"];
+      header = ["Name", "Type", "Tier", "Quality Level"];
       stats_header = [];
       _ref = DEFS.stats;
       for (id in _ref) {

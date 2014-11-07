@@ -10,7 +10,7 @@ class Item
     !@vault()
 
   csv: (stats_header, material_names)->
-    item_csv = [@data.itemName()]
+    item_csv = [@data.itemName(), @data.itemTypeName(), @data.tierTypeName(), @data.qualityLevel() ]
     stat_csv = []
     for stat in stats_header
       found_stat = (instace_stat for instace_stat in  @instance.stats() when instace_stat.statHash() == stat)[0]
@@ -81,7 +81,7 @@ class Upgrader
       @totals
 
   itemsCSV: ->
-    header = ["Name"]
+    header = ["Name", "Type", "Tier", "Quality Level"]
     stats_header = []
     for id, data of DEFS.stats
       stats_header.push(parseInt(id,10))

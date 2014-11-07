@@ -93,10 +93,8 @@ class Upgrader
         @addItem(object.itemInstanceId, {"vault": false, "instance": object, "data": data, "bucket": DEFS['buckets'][data.bucketTypeHash]})
     #equipped only
     for bucket in tempModel.inventory.buckets.Item
-      console.log(bucket)
       if DEFS.buckets[bucket.bucketHash].bucketIdentifier == "BUCKET_MATERIALS"
         for item in bucket.items
-          console.log(item)
           name = DEFS["items"][item.itemHash].itemName
           @ownedTotals.add(name, item.stackSize)
 
@@ -160,20 +158,20 @@ unless $('.upgrader')[0]
     <div style='height:20px'>
       <!-- ko ifnot: error -->
         <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a>
-        <label><input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' />
-        <!-- ko ifnot: vaultLoaded()-->
-          Click Gear for Vault
-        <!-- /ko -->
-        <!-- ko if: vaultLoaded()-->
-          Include Vault
-        <!-- /ko -->
-        </label>
       <!-- /ko -->
       <!-- ko if: error -->
         <span data-bind='text: error'></span>
       <!-- /ko -->
     </div>
     <span id='upgrader-data' data-bind='ifnot: error'>
+      <label><input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' />
+      <!-- ko ifnot: vaultLoaded()-->
+        Click Gear for Vault
+      <!-- /ko -->
+      <!-- ko if: vaultLoaded()-->
+        Include Vault
+      <!-- /ko -->
+      </label>
       <ul class='totals' data-bind='foreach: total_object().list()'>
         <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li>
       </ul>

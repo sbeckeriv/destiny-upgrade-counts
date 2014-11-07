@@ -188,7 +188,6 @@
       _results = [];
       for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
         bucket = _ref2[_k];
-        console.log(bucket);
         if (DEFS.buckets[bucket.bucketHash].bucketIdentifier === "BUCKET_MATERIALS") {
           _results.push((function() {
             var _l, _len3, _ref3, _results1;
@@ -196,7 +195,6 @@
             _results1 = [];
             for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
               item = _ref3[_l];
-              console.log(item);
               name = DEFS["items"][item.itemHash].itemName;
               _results1.push(this.ownedTotals.add(name, item.stackSize));
             }
@@ -300,7 +298,7 @@
   window.upgrader = new Upgrader;
 
   if (!$('.upgrader')[0]) {
-    $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'> <div style='height:20px'> <!-- ko ifnot: error --> <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a> <label><input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' /> <!-- ko ifnot: vaultLoaded()--> Click Gear for Vault <!-- /ko --> <!-- ko if: vaultLoaded()--> Include Vault <!-- /ko --> </label> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <ul class='totals' data-bind='foreach: total_object().list()'> <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li> </ul> <ul class='totals' data-bind='foreach: items'> <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) --> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: displayName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
+    $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'> <div style='height:20px'> <!-- ko ifnot: error --> <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <label><input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' /> <!-- ko ifnot: vaultLoaded()--> Click Gear for Vault <!-- /ko --> <!-- ko if: vaultLoaded()--> Include Vault <!-- /ko --> </label> <ul class='totals' data-bind='foreach: total_object().list()'> <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li> </ul> <ul class='totals' data-bind='foreach: items'> <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) --> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: displayName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
     ko.applyBindings(window.upgrader, $('.upgrader')[0]);
   }
 

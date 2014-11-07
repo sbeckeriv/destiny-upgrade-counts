@@ -21,6 +21,49 @@
       return !this.vault();
     };
 
+    Item.prototype.csv = function(stats_header, material_names) {
+      var count, found_stat, instace_stat, item_csv, mat_data, name, perk, perk_string, stat, stat_csv, string, _i, _j, _k, _len, _len1, _len2, _ref;
+      item_csv = [this.data.itemName()];
+      stat_csv = [];
+      for (_i = 0, _len = stats_header.length; _i < _len; _i++) {
+        stat = stats_header[_i];
+        found_stat = ((function() {
+          var _j, _len1, _ref, _results;
+          _ref = this.instance.stats();
+          _results = [];
+          for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+            instace_stat = _ref[_j];
+            if (instace_stat.statHash() === stat) {
+              _results.push(instace_stat);
+            }
+          }
+          return _results;
+        }).call(this))[0];
+        if (found_stat) {
+          stat_csv[stats_header.indexOf(stat)] = found_stat.value();
+        } else {
+          stat_csv[stats_header.indexOf(stat)] = "";
+        }
+      }
+      perk_string = "";
+      _ref = this.instance.perks();
+      for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+        perk = _ref[_j];
+        perk_string += "" + (this.json.Response.definitions.perks[perk.perkHash()].displayName()) + "\n";
+      }
+      mat_data = [];
+      for (_k = 0, _len2 = material_names.length; _k < _len2; _k++) {
+        name = material_names[_k];
+        count = 0;
+        if (this.material_names[name]) {
+          count = this.material_names[name]();
+        }
+        mat_data.push(count);
+      }
+      string = item_csv.concat(stat_csv, ["\"" + perk_string + "\""], mat_data).join();
+      return string;
+    };
+
     return Item;
 
   })();
@@ -102,6 +145,30 @@
       } else {
         return this.totals;
       }
+    };
+
+    Upgrader.prototype.itemsCSV = function() {
+      var csv, data, header, id, item, mat_names, stats_header, _i, _len, _ref, _ref1;
+      header = ["Name"];
+      stats_header = [];
+      _ref = DEFS.stats;
+      for (id in _ref) {
+        data = _ref[id];
+        stats_header.push(parseInt(id, 10));
+        header.push(data.statName);
+      }
+      mat_names = this.total_object().names();
+      header.push("Perks");
+      header = header.concat(mat_names);
+      csv = [header.join()];
+      _ref1 = this.items();
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        item = _ref1[_i];
+        if (["BUCKET_SPECIAL_WEAPON", "BUCKET_HEAVY_WEAPON", "BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier()) >= 0) {
+          csv.push(item.csv(stats_header, mat_names));
+        }
+      }
+      return csv;
     };
 
     Upgrader.prototype.processVault = function() {

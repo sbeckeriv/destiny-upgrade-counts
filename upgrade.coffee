@@ -8,6 +8,28 @@ class Item
     name
   check_vault: ->
     !@vault()
+
+  csv: (stats_header, material_names)->
+    item_csv = [@data.itemName()]
+    stat_csv = []
+    for stat in stats_header
+      found_stat = (instace_stat for instace_stat in  @instance.stats() when instace_stat.statHash() == stat)[0]
+      if found_stat
+        stat_csv[stats_header.indexOf(stat)] = found_stat.value()
+      else
+        stat_csv[stats_header.indexOf(stat)] = ""
+    perk_string = ""
+    for perk in @instance.perks()
+      perk_string += "#{@json.Response.definitions.perks[perk.perkHash()].displayName()}\n"
+    mat_data = []
+    for name in material_names
+      count = 0
+      if @material_names[name]
+        count = @material_names[name]()
+      mat_data.push(count)
+    string = item_csv.concat(stat_csv, ["\"#{perk_string}\""], mat_data).join()
+    string
+
 #knockout object to hold the totals to update display
 class Totals
   constructor: ->
@@ -51,11 +73,27 @@ class Upgrader
       , 600)
     catch error
       @error("There was a problem loading the site: #{error}")
+
   total_object: ->
     if @displayVault()
       @vaultTotals
     else
       @totals
+
+  itemsCSV: ->
+    header = ["Name"]
+    stats_header = []
+    for id, data of DEFS.stats
+      stats_header.push(parseInt(id,10))
+      header.push(data.statName)
+    mat_names = @total_object().names()
+    header.push("Perks")
+    header = header.concat(mat_names)
+    csv = [header.join()]
+    for item in @items()
+      if ["BUCKET_SPECIAL_WEAPON","BUCKET_HEAVY_WEAPON","BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier())>=0
+        csv.push(item.csv(stats_header, mat_names))
+    csv
 
   processVault: ->
     vendor_id = null
@@ -82,7 +120,7 @@ class Upgrader
             if @ownedTotals[datas.itemName]
               @ownedTotals.add(datas.itemName, item.stackSize)
 
-            @addItem(item.itemInstanceId, {"vault": true, "data": datas,"instance":item, "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]})
+            @addItem(item.itemInstanceId, {"vault": true, "data": datas, "instance":item, "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]})
     else
 
   processItems: ->
@@ -185,7 +223,9 @@ unless $('.upgrader')[0]
           </li>
         <!-- /ko -->
       </ul>
+
     </span>
+
   </li>")
   #bind my object to my new dom element
   ko.applyBindings(window.upgrader, $('.upgrader')[0])

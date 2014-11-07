@@ -17,6 +17,11 @@ class Totals
     @list = ko.computed( =>
       [name, @[name]()] for name in @names()
     )
+  count: (name) =>
+    if @[name]
+      @[name]()
+    else
+      0
   add: (name,count) =>
     # if we already have it add it. If not create observable. Add list to name as a key.
     if @[name]
@@ -33,7 +38,8 @@ class Upgrader
     @characterID = null
     @items = ko.observableArray()
     @totals = new Totals
-    @vault_totals = new Totals
+    @vaultTotals = new Totals
+    @ownedTotals = new Totals
     @setIDs()
     @vaultLoaded = ko.observable(false) # can be computed if any items have vault
     @displayVault = ko.observable(false)
@@ -47,7 +53,7 @@ class Upgrader
       @error("There was a problem loading the site: #{error}")
   total_object: ->
     if @displayVault()
-      @vault_totals
+      @vaultTotals
     else
       @totals
 
@@ -60,7 +66,6 @@ class Upgrader
       clearInterval(@venderTimeout)
       @vaultLoaded(true)
       url = @vaultInventoryUrl.replace("CHARACTER_ID_SUB", @characterID).replace("VENDOR_ID", vendor_id)
-      console.log(url)
       $.ajax({
         url: url, type: "GET",
         beforeSend: (xhr) ->
@@ -71,14 +76,10 @@ class Upgrader
           for key,value of bungieNetPlatform.getHeaders()
             xhr.setRequestHeader(key, value)
       }).done (item_json) =>
-        console.log(item_json)
         for bucket in item_json["Response"]["data"]["inventoryBuckets"]
-          console.log(bucket)
           for item in bucket.items
-            console.log(item)
             @addItem(item.itemInstanceId, {"vault": true, "data": item_json["Response"]["definitions"]["items"][item.itemHash] ,"instance":item, "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]})
     else
-      console.log("no vault")
 
   processItems: ->
     # use bungie js model to key the values. Just a double loop of arrays
@@ -86,6 +87,14 @@ class Upgrader
       for object in item.items
         data = DEFS["items"][object.itemHash]
         @addItem(object.itemInstanceId, {"vault": false, "instance": object, "data": data, "bucket": DEFS['buckets'][data.bucketTypeHash]})
+    #equipped only
+    for bucket in tempModel.inventory.buckets.Item
+      console.log(bucket)
+      if DEFS.buckets[bucket.bucketHash].bucketIdentifier == "BUCKET_MATERIALS"
+        for item in bucket.items
+          console.log(item)
+          name = DEFS["items"][item.itemHash].itemName
+          @ownedTotals.add(name, item.stackSize)
 
   setIDs: ->
     #simple regex.
@@ -132,7 +141,7 @@ class Upgrader
       for name, ms of materials
         total = 0
         total = total+ m.count for m in ms
-        @vault_totals.add(name,total)
+        @vaultTotals.add(name,total)
         @totals.add(name,total) unless base_object["vault"]
         clean_list[name] = total
       clean_array = ({name: name, total: total} for name, total of clean_list)
@@ -162,7 +171,7 @@ unless $('.upgrader')[0]
     </div>
     <span id='upgrader-data' data-bind='ifnot: error'>
       <ul class='totals' data-bind='foreach: total_object().list()'>
-        <li data-bind=\"text: $data[0]+': '+$data[1]\"></li>
+        <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li>
       </ul>
       <ul class='totals' data-bind='foreach: items'>
         <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) -->

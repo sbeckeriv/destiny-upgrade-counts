@@ -28,6 +28,7 @@
   Totals = (function() {
     function Totals() {
       this.add = __bind(this.add, this);
+      this.count = __bind(this.count, this);
       this.names = ko.observableArray([]);
       this.list = ko.computed((function(_this) {
         return function() {
@@ -42,6 +43,14 @@
         };
       })(this));
     }
+
+    Totals.prototype.count = function(name) {
+      if (this[name]) {
+        return this[name]();
+      } else {
+        return 0;
+      }
+    };
 
     Totals.prototype.add = function(name, count) {
       if (this[name]) {
@@ -68,7 +77,8 @@
       this.characterID = null;
       this.items = ko.observableArray();
       this.totals = new Totals;
-      this.vault_totals = new Totals;
+      this.vaultTotals = new Totals;
+      this.ownedTotals = new Totals;
       this.setIDs();
       this.vaultLoaded = ko.observable(false);
       this.displayVault = ko.observable(false);
@@ -88,7 +98,7 @@
 
     Upgrader.prototype.total_object = function() {
       if (this.displayVault()) {
-        return this.vault_totals;
+        return this.vaultTotals;
       } else {
         return this.totals;
       }
@@ -108,7 +118,6 @@
         clearInterval(this.venderTimeout);
         this.vaultLoaded(true);
         url = this.vaultInventoryUrl.replace("CHARACTER_ID_SUB", this.characterID).replace("VENDOR_ID", vendor_id);
-        console.log(url);
         return $.ajax({
           url: url,
           type: "GET",
@@ -126,19 +135,16 @@
         }).done((function(_this) {
           return function(item_json) {
             var bucket, item, _i, _len, _ref1, _results;
-            console.log(item_json);
             _ref1 = item_json["Response"]["data"]["inventoryBuckets"];
             _results = [];
             for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
               bucket = _ref1[_i];
-              console.log(bucket);
               _results.push((function() {
                 var _j, _len1, _ref2, _results1;
                 _ref2 = bucket.items;
                 _results1 = [];
                 for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
                   item = _ref2[_j];
-                  console.log(item);
                   _results1.push(this.addItem(item.itemInstanceId, {
                     "vault": true,
                     "data": item_json["Response"]["definitions"]["items"][item.itemHash],
@@ -153,32 +159,48 @@
           };
         })(this));
       } else {
-        return console.log("no vault");
+
       }
     };
 
     Upgrader.prototype.processItems = function() {
-      var data, item, object, _i, _len, _ref, _results;
+      var bucket, data, item, name, object, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _results;
       _ref = tempModel.inventory.buckets.Equippable;
-      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         item = _ref[_i];
-        _results.push((function() {
-          var _j, _len1, _ref1, _results1;
-          _ref1 = item.items;
-          _results1 = [];
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            object = _ref1[_j];
-            data = DEFS["items"][object.itemHash];
-            _results1.push(this.addItem(object.itemInstanceId, {
-              "vault": false,
-              "instance": object,
-              "data": data,
-              "bucket": DEFS['buckets'][data.bucketTypeHash]
-            }));
-          }
-          return _results1;
-        }).call(this));
+        _ref1 = item.items;
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          object = _ref1[_j];
+          data = DEFS["items"][object.itemHash];
+          this.addItem(object.itemInstanceId, {
+            "vault": false,
+            "instance": object,
+            "data": data,
+            "bucket": DEFS['buckets'][data.bucketTypeHash]
+          });
+        }
+      }
+      _ref2 = tempModel.inventory.buckets.Item;
+      _results = [];
+      for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+        bucket = _ref2[_k];
+        console.log(bucket);
+        if (DEFS.buckets[bucket.bucketHash].bucketIdentifier === "BUCKET_MATERIALS") {
+          _results.push((function() {
+            var _l, _len3, _ref3, _results1;
+            _ref3 = bucket.items;
+            _results1 = [];
+            for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+              item = _ref3[_l];
+              console.log(item);
+              name = DEFS["items"][item.itemHash].itemName;
+              _results1.push(this.ownedTotals.add(name, item.stackSize));
+            }
+            return _results1;
+          }).call(this));
+        } else {
+          _results.push(void 0);
+        }
       }
       return _results;
     };
@@ -242,7 +264,7 @@
               m = ms[_k];
               total = total + m.count;
             }
-            _this.vault_totals.add(name, total);
+            _this.vaultTotals.add(name, total);
             if (!base_object["vault"]) {
               _this.totals.add(name, total);
             }
@@ -274,7 +296,7 @@
   window.upgrader = new Upgrader;
 
   if (!$('.upgrader')[0]) {
-    $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'> <div style='height:20px'> <!-- ko ifnot: error --> <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a> <label><input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' /> <!-- ko ifnot: vaultLoaded()--> Click Gear for Vault <!-- /ko --> <!-- ko if: vaultLoaded()--> Include Vault <!-- /ko --> </label> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <ul class='totals' data-bind='foreach: total_object().list()'> <li data-bind=\"text: $data[0]+': '+$data[1]\"></li> </ul> <ul class='totals' data-bind='foreach: items'> <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) --> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: displayName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
+    $(".nav_top").append("<li class='upgrader' style='width:300px;clear:left;background-color:white;min-height:10px;max-height:550px;overflow-x:auto'> <div style='height:20px'> <!-- ko ifnot: error --> <a href='#' onclick='$(\"#upgrader-data\").toggle();return false;'>UPGRADES</a> <label><input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' /> <!-- ko ifnot: vaultLoaded()--> Click Gear for Vault <!-- /ko --> <!-- ko if: vaultLoaded()--> Include Vault <!-- /ko --> </label> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <ul class='totals' data-bind='foreach: total_object().list()'> <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li> </ul> <ul class='totals' data-bind='foreach: items'> <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) --> <li class='item' style='border-bottom: solid 1px'> <span data-bind='text: displayName()'></span> <ul data-bind='foreach: material_array()'> <li style='color:#B5B7A4;background-color:#4D5F5F' data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
     ko.applyBindings(window.upgrader, $('.upgrader')[0]);
   }
 

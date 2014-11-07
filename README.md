@@ -1,4 +1,3 @@
-
 Bookmarklet to display upgrade material counts on the character page.
 ======================
 
@@ -35,6 +34,9 @@ Open
 ![open](http://sbeckeriv.github.io/destiny-upgrade-counts/open.png)
 
 Not Open
+![not open](http://sbeckeriv.github.io/destiny-upgrade-counts/close.png)
+
+Active vault
 ![not open](http://sbeckeriv.github.io/destiny-upgrade-counts/close.png)
 ====================
 

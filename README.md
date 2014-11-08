@@ -36,10 +36,6 @@ Open
 Not Open
 ![not open](http://sbeckeriv.github.io/destiny-upgrade-counts/close.png)
 
-Active vault
-![not open](http://sbeckeriv.github.io/destiny-upgrade-counts/close.png)
-====================
-
 Playing
 ===================
 Inspect the data
@@ -59,3 +55,26 @@ Make pretty
 Better vendor vault detection
 
 CSV
+
+
+Versions
+====================
+```
+- 20141107 
+-- New CSS
+-- itemsCSV() method
+- 20141106
+-- Show owned totals
+- 20141105
+-- Show vault data
+- 20141103
+-- Readme updates
+-- https fix
+- 20141101
+-- Fist cut
+```
+
+Contributors
+=====================
+- https://github.com/eternicode Killer css update
+- solrac214@reddit greesemonkey script code

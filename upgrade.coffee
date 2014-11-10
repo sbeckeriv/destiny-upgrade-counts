@@ -150,7 +150,7 @@ class Upgrader
     for id, data of DEFS.stats
       stats_header.push(parseInt(id,10))
       header.push(data.statName)
-    mat_names = @total_object().names()
+    mat_names = @totals().names()
     header.push("Perks")
     header = header.concat(mat_names)
     csv = [header.join()]
@@ -296,8 +296,13 @@ unless $('.upgrader')[0]
       <!-- /ko -->
     </div>
     <span id='upgrader-data' data-bind='ifnot: error'>
-      <ul class='totals' data-bind='foreach: total_object().list()'>
-        <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li>
+      <ul>
+        <li class='item'>
+          <span>Total counts(owned)</span>
+          <ul class='totals' data-bind='foreach: totals().list()'>
+            <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li>
+          </ul>
+        </li>
       </ul>
       <ul class='item-totals' data-bind='foreach: items'>
         <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) -->

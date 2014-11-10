@@ -6,7 +6,79 @@
   Item = (function() {
     function Item(data) {
       ko.mapping.fromJS(data, {}, this);
+      this.material_list = ko.computed((function(_this) {
+        return function() {
+          var list, material, talentNodes, _i, _j, _len, _len1, _ref, _ref1;
+          list = [];
+          _ref = _this.json["Response"]["data"]["talentNodes"]();
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            talentNodes = _ref[_i];
+            _ref1 = talentNodes.materialsToUpgrade();
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              material = _ref1[_j];
+              material["name"] = _this.json["Response"]["definitions"]["items"][material.itemHash()]["itemName"]();
+              list.push(material);
+            }
+          }
+          return list;
+        };
+      })(this));
+      this.materials = ko.computed((function(_this) {
+        return function() {
+          var group;
+          group = _this.group_by(_this.material_list(), "name");
+          return group;
+        };
+      })(this));
+      this.material_names = ko.computed((function(_this) {
+        return function() {
+          var clean_list, m, ms, name, total, _i, _len, _ref;
+          clean_list = {};
+          _ref = _this.materials();
+          for (name in _ref) {
+            ms = _ref[name];
+            total = 0;
+            for (_i = 0, _len = ms.length; _i < _len; _i++) {
+              m = ms[_i];
+              total = +m.count();
+            }
+            clean_list[name] = total;
+          }
+          return clean_list;
+        };
+      })(this));
+      this.material_array = ko.computed((function(_this) {
+        return function() {
+          var array, name, total;
+          array = (function() {
+            var _ref, _results;
+            _ref = this.material_names();
+            _results = [];
+            for (name in _ref) {
+              total = _ref[name];
+              _results.push({
+                name: name,
+                total: total
+              });
+            }
+            return _results;
+          }).call(_this);
+          return array;
+        };
+      })(this));
     }
+
+    Item.prototype.group_by = function(array, key) {
+      var item, items, _i, _len, _name;
+      items = {};
+      for (_i = 0, _len = array.length; _i < _len; _i++) {
+        item = array[_i];
+        if (item[key]) {
+          (items[_name = item[key]] || (items[_name] = [])).push(item);
+        }
+      }
+      return items;
+    };
 
     Item.prototype.displayName = function() {
       var name;
@@ -19,6 +91,19 @@
 
     Item.prototype.check_vault = function() {
       return !this.vault();
+    };
+
+    Item.prototype.materialsByTier = function() {
+      var hash, item, materialByTier, _i, _len, _name, _ref;
+      materialByTier = {};
+      _ref = this.json.Response.data.materialItemHashes();
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        hash = _ref[_i];
+        item = json.Response.definitions.items[hash];
+        materialByTier[_name = item.tierTypeName()] || (materialByTier[_name] = []);
+        materialByTier[item.tierTypeName()].push(item.itemName());
+      }
+      return materialByTier;
     };
 
     Item.prototype.csv = function(stats_header, material_names) {
@@ -119,8 +204,24 @@
       this.accountID = null;
       this.characterID = null;
       this.items = ko.observableArray();
-      this.totals = new Totals;
-      this.vaultTotals = new Totals;
+      this.totals = ko.computed((function(_this) {
+        return function() {
+          var count, item, name, total, _i, _len, _ref, _ref1;
+          total = new Totals;
+          _ref = _this.items();
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            item = _ref[_i];
+            if (_this.displayVault() || !item.vault()) {
+              _ref1 = item.material_names();
+              for (name in _ref1) {
+                count = _ref1[name];
+                total.add(name, count);
+              }
+            }
+          }
+          return total;
+        };
+      })(this));
       this.ownedTotals = new Totals;
       this.setIDs();
       this.vaultLoaded = ko.observable(false);
@@ -137,14 +238,35 @@
         error = _error;
         this.error("There was a problem loading the site: " + error);
       }
+      this.itemsCSV = ko.computed((function(_this) {
+        return function() {
+          var csv, data, header, id, item, mat_names, stats_header, _i, _len, _ref, _ref1;
+          header = ["Name", "Type", "Tier", "Quality Level"];
+          stats_header = [];
+          _ref = DEFS.stats;
+          for (id in _ref) {
+            data = _ref[id];
+            stats_header.push(parseInt(id, 10));
+            header.push(data.statName);
+          }
+          mat_names = _this.total_object().names();
+          header.push("Perks");
+          header = header.concat(mat_names);
+          csv = [header.join()];
+          _ref1 = _this.items();
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            item = _ref1[_i];
+            if (["BUCKET_SPECIAL_WEAPON", "BUCKET_HEAVY_WEAPON", "BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier()) >= 0) {
+              csv.push(item.csv(stats_header, mat_names));
+            }
+          }
+          return csv;
+        };
+      })(this));
     }
 
     Upgrader.prototype.total_object = function() {
-      if (this.displayVault()) {
-        return this.vaultTotals;
-      } else {
-        return this.totals;
-      }
+      return this.totals();
     };
 
     Upgrader.prototype.itemsCSV = function() {
@@ -281,16 +403,6 @@
       return this.characterID = matches[3];
     };
 
-    Upgrader.prototype.group_by = function(array, key) {
-      var item, items, _i, _len, _name;
-      items = {};
-      for (_i = 0, _len = array.length; _i < _len; _i++) {
-        item = array[_i];
-        (items[_name = item[key]] || (items[_name] = [])).push(item);
-      }
-      return items;
-    };
-
     Upgrader.prototype.addItem = function(iiid, base_object) {
       var url;
       url = this.baseInventoryUrl.replace("ACCOUNT_ID_SUB", this.accountID).replace("CHARACTER_ID_SUB", this.characterID).replace("IIID_SUB", iiid);
@@ -310,49 +422,7 @@
         }
       }).done((function(_this) {
         return function(item_json) {
-          var clean_array, clean_list, m, material, material_list, materials, ms, name, talentNodes, total, _i, _j, _k, _len, _len1, _len2, _ref, _ref1;
-          material_list = [];
-          _ref = item_json["Response"]["data"]["talentNodes"];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            talentNodes = _ref[_i];
-            _ref1 = talentNodes.materialsToUpgrade;
-            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-              material = _ref1[_j];
-              material["name"] = item_json["Response"]["definitions"]["items"][material.itemHash]["itemName"];
-              material_list.push(material);
-            }
-          }
-          materials = _this.group_by(material_list, "name");
           base_object["json"] = item_json;
-          base_object["material"] = materials;
-          clean_list = {};
-          for (name in materials) {
-            ms = materials[name];
-            total = 0;
-            for (_k = 0, _len2 = ms.length; _k < _len2; _k++) {
-              m = ms[_k];
-              total = total + m.count;
-            }
-            _this.vaultTotals.add(name, total);
-            if (!base_object["vault"]) {
-              _this.totals.add(name, total);
-            }
-            clean_list[name] = total;
-          }
-          clean_array = (function() {
-            var _results;
-            _results = [];
-            for (name in clean_list) {
-              total = clean_list[name];
-              _results.push({
-                name: name,
-                total: total
-              });
-            }
-            return _results;
-          })();
-          base_object["material_names"] = clean_list;
-          base_object["material_array"] = clean_array;
           return _this.items.push(new Item(base_object));
         };
       })(this));
@@ -370,7 +440,7 @@
       secondary: '#2D3137',
       tertiary: '#393F45'
     };
-    $(".nav_top").append("<style> .upgrader { width: 300px; min-height: 10px; max-height: 550px; clear: left; background-color: " + colors.primary + "; color: #fff; padding: 0 .5em; overflow-x: auto; border-bottom: " + colors.primary + " solid 1px; border-radius: 0 0 0 5px; } .upgrader .header { height: 20px; padding: .5em 0; } .upgrader .header span { cursor: pointer; float: left; } .upgrader .header label { float: right; } .upgrader .totals { background: " + colors.secondary + "; border-radius: 5px; padding: .5em; } .upgrader .item { background: " + colors.secondary + "; border-radius: 5px; margin:.5em 0; } .upgrader .item span { padding: .25em .5em; display: inline-block; } .upgrader .item ul { background: " + colors.tertiary + "; border-radius: 0 0 5px 5px; padding:.25em .5em; } </style> <li class='upgrader'> <div class='header'> <!-- ko ifnot: error --> <span onclick='$(\"#upgrader-data\").toggle();return false;'> UPGRADES </span> <label> <input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' /> <!-- ko ifnot: vaultLoaded()--> Click Gear for Vault <!-- /ko --> <!-- ko if: vaultLoaded()--> Include Vault <!-- /ko --> </label> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <ul class='totals' data-bind='foreach: total_object().list()'> <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li> </ul> <ul class='item-totals' data-bind='foreach: items'> <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) --> <li class='item'> <span data-bind='text: displayName()'></span> <ul data-bind='foreach: material_array()'> <li data-bind=\"text: name()+': '+total()\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
+    $(".nav_top").append("<style> .upgrader { width: 300px; min-height: 10px; max-height: 550px; clear: left; background-color: " + colors.primary + "; color: #fff; padding: 0 .5em; overflow-x: auto; border-bottom: " + colors.primary + " solid 1px; border-radius: 0 0 0 5px; } .upgrader .header { height: 20px; padding: .5em 0; } .upgrader .header span { cursor: pointer; float: left; } .upgrader .header label { float: right; } .upgrader .totals { background: " + colors.secondary + "; border-radius: 5px; padding: .5em; } .upgrader .item { background: " + colors.secondary + "; border-radius: 5px; margin:.5em 0; } .upgrader .item span { padding: .25em .5em; display: inline-block; } .upgrader .item ul { background: " + colors.tertiary + "; border-radius: 0 0 5px 5px; padding:.25em .5em; } </style> <li class='upgrader'> <div class='header'> <!-- ko ifnot: error --> <span onclick='$(\"#upgrader-data\").toggle();return false;'> UPGRADES </span> <label> <input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' /> <!-- ko ifnot: vaultLoaded()--> Click Gear for Vault <!-- /ko --> <!-- ko if: vaultLoaded()--> Include Vault <!-- /ko --> </label> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <ul class='totals' data-bind='foreach: total_object().list()'> <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li> </ul> <ul class='item-totals' data-bind='foreach: items'> <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) --> <li class='item'> <span data-bind='text: displayName()'></span> <ul data-bind='foreach: material_array()'> <li data-bind=\"text: name+': '+total\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
     ko.applyBindings(window.upgrader, $('.upgrader')[0]);
   }
 

@@ -2,12 +2,60 @@
 class Item
   constructor: (data)->
     ko.mapping.fromJS(data, {}, @)
+    @material_list = ko.computed( =>
+      list = []
+      for talentNodes in @json["Response"]["data"]["talentNodes"]()
+        for material in talentNodes.materialsToUpgrade()
+          #name and other details is stored under definitions. Then the instance for you is under data.
+          #This is so you always have the details for what you are displaying. If parts is in the data list
+          #50 times you only see general details for parts once instead of 50. Helps on space?
+          material["name"] = @json["Response"]["definitions"]["items"][material.itemHash()]["itemName"]()
+          list.push(material)
+      list
+    )
+
+    @materials = ko.computed( =>
+      group = @group_by(@material_list(), "name")
+      group
+    )
+
+    @material_names = ko.computed( =>
+      clean_list = {}
+      #count for each material
+      #store the over all total too. We could count this on the way out as well.
+      for name, ms of @materials()
+        total = 0
+        for m in ms
+          total =+ m.count()
+        clean_list[name] = total
+      clean_list
+    )
+
+    @material_array = ko.computed( =>
+      array= ({name: name, total: total} for name, total of @material_names())
+      array
+    )
+  group_by: (array, key) ->
+    items = {}
+    for item in array
+      if item[key]
+        (items[item[key]] or= []).push item
+    items
   displayName: ->
     name = "#{@data.itemName()}: #{@bucket.bucketName()}"
     name += " Vault" if @vault()
     name
   check_vault: ->
     !@vault()
+
+  materialsByTier: ->
+    #memoize
+    materialByTier = {}
+    for hash in @json.Response.data.materialItemHashes()
+      item = json.Response.definitions.items[hash]
+      materialByTier[item.tierTypeName()] or= []
+      materialByTier[item.tierTypeName()].push(item.itemName())
+    materialByTier
 
   csv: (stats_header, material_names)->
     item_csv = [@data.itemName(), @data.itemTypeName(), @data.tierTypeName(), @data.qualityLevel() ]
@@ -59,8 +107,12 @@ class Upgrader
     @accountID = null
     @characterID = null
     @items = ko.observableArray()
-    @totals = new Totals
-    @vaultTotals = new Totals
+    @totals = ko.computed =>
+      total = new Totals
+      for item in @items() when @displayVault() || !item.vault()
+        for name, count of item.material_names()
+          total.add(name,count)
+      total
     @ownedTotals = new Totals
     @setIDs()
     @vaultLoaded = ko.observable(false) # can be computed if any items have vault
@@ -74,11 +126,23 @@ class Upgrader
     catch error
       @error("There was a problem loading the site: #{error}")
 
+    @itemsCSV = ko.computed( ()=>
+      header = ["Name", "Type", "Tier", "Quality Level"]
+      stats_header = []
+      for id, data of DEFS.stats
+        stats_header.push(parseInt(id,10))
+        header.push(data.statName)
+      mat_names = @total_object().names()
+      header.push("Perks")
+      header = header.concat(mat_names)
+      csv = [header.join()]
+      for item in @items()
+        if ["BUCKET_SPECIAL_WEAPON","BUCKET_HEAVY_WEAPON","BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier())>=0
+          csv.push(item.csv(stats_header, mat_names))
+      csv
+    )
   total_object: ->
-    if @displayVault()
-      @vaultTotals
-    else
-      @totals
+    @totals()
 
   itemsCSV: ->
     header = ["Name", "Type", "Tier", "Quality Level"]
@@ -141,13 +205,6 @@ class Upgrader
     matches = window.location.pathname.match(/(.+)\/(\d+)\/(\d+)/)
     @accountID = matches[2]
     @characterID = matches[3]
-  #turn [{x: 5, y:6}, {x:5, y:7}}] in to {5: [{x: 5, y:6}, {x:5, y:7}}}
-  #usefully for grouping items over different arrays
-  group_by: (array, key) ->
-    items = {}
-    for item in array
-      (items[item[key]] or= []).push item
-    items
 
   addItem: (iiid, base_object) =>
     url = @baseInventoryUrl.replace("ACCOUNT_ID_SUB", @accountID).replace("CHARACTER_ID_SUB", @characterID).replace("IIID_SUB", iiid)
@@ -162,31 +219,7 @@ class Upgrader
         for key,value of bungieNetPlatform.getHeaders()
           xhr.setRequestHeader(key, value)
     }).done (item_json) =>
-      material_list = []
-      for talentNodes in item_json["Response"]["data"]["talentNodes"]
-        for material in talentNodes.materialsToUpgrade
-          #name and other details is stored under definitions. Then the instance for you is under data.
-          #This is so you always have the details for what you are displaying. If parts is in the data list
-          #50 times you only see general details for parts once instead of 50. Helps on space?
-          material["name"] = item_json["Response"]["definitions"]["items"][material.itemHash]["itemName"]
-          material_list.push(material)
-      #should look like {"Helium Filaments": [...], "Ascendant Energy": [..]}
-      materials = @group_by(material_list, "name")
-      #storing data to use for later.
       base_object["json"] = item_json
-      base_object["material"] = materials
-      clean_list = {}
-      #count for each material
-      #store the over all total too. We could count this on the way out as well.
-      for name, ms of materials
-        total = 0
-        total = total+ m.count for m in ms
-        @vaultTotals.add(name,total)
-        @totals.add(name,total) unless base_object["vault"]
-        clean_list[name] = total
-      clean_array = ({name: name, total: total} for name, total of clean_list)
-      base_object["material_names"] = clean_list
-      base_object["material_array"] = clean_array
       @items.push(new Item(base_object))
 
 window.upgrader = new Upgrader
@@ -271,7 +304,7 @@ unless $('.upgrader')[0]
           <li class='item'>
             <span data-bind='text: displayName()'></span>
             <ul data-bind='foreach: material_array()'>
-              <li data-bind=\"text: name()+': '+total()\"></li>
+              <li data-bind=\"text: name+': '+total\"></li>
             </ul>
           </li>
         <!-- /ko -->

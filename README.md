@@ -60,6 +60,9 @@ CSV
 Versions
 ====================
 ```
+- 20141110
+-- Rewrite internals. Moved counts to items. Removed cruft. 
+-- Added total header
 - 20141107 
 -- New CSS
 -- itemsCSV() method

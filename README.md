@@ -48,13 +48,9 @@ If you get a function when you expected something its most likely a knockout obs
 todo
 ===================
 
-Learn markdown
-
-Make pretty
-
 Better vendor vault detection
 
-CSV
+CSV UI
 
 
 Versions

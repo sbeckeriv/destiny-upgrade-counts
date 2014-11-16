@@ -48,10 +48,6 @@ If you get a function when you expected something its most likely a knockout obs
 todo
 ===================
 
-Learn markdown
-
-Make pretty
-
 Better vendor vault detection
 
 Versions
@@ -59,6 +55,9 @@ Versions
 ```
 - 20141116
 -- disply csv data
+- 20141110
+-- Rewrite internals. Moved counts to items. Removed cruft.
+-- Added total header
 - 20141107
 -- New CSS
 -- itemsCSV() method

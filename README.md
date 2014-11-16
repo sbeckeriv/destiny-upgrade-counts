@@ -55,6 +55,7 @@ Versions
 ```
 - 20141116
 -- disply csv data
+-- fix count
 - 20141110
 -- Rewrite internals. Moved counts to items. Removed cruft.
 -- Added total header

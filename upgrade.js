@@ -40,7 +40,7 @@
             total = 0;
             for (_i = 0, _len = ms.length; _i < _len; _i++) {
               m = ms[_i];
-              total = +m.count();
+              total = total + m.count();
             }
             clean_list[name] = total;
           }

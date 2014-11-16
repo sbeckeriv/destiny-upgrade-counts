@@ -26,8 +26,9 @@ class Item
       for name, ms of @materials()
         total = 0
         for m in ms
-          total =+ m.count()
+          total = total+ m.count()
         clean_list[name] = total
+
       clean_list
     )
 

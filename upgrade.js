@@ -106,7 +106,7 @@
       return materialByTier;
     };
 
-    Item.prototype.csv = function(stats_header, material_names) {
+    Item.prototype.csv = function(stats_header, material_name_list) {
       var count, found_stat, instace_stat, item_csv, mat_data, name, perk, perk_string, stat, stat_csv, string, _i, _j, _k, _len, _len1, _len2, _ref;
       item_csv = [this.data.itemName(), this.data.itemTypeName(), this.data.tierTypeName(), this.data.qualityLevel()];
       stat_csv = [];
@@ -137,11 +137,11 @@
         perk_string += "" + (this.json.Response.definitions.perks[perk.perkHash()].displayName()) + "\n";
       }
       mat_data = [];
-      for (_k = 0, _len2 = material_names.length; _k < _len2; _k++) {
-        name = material_names[_k];
+      for (_k = 0, _len2 = material_name_list.length; _k < _len2; _k++) {
+        name = material_name_list[_k];
         count = 0;
-        if (this.material_names[name]) {
-          count = this.material_names[name]();
+        if (this.material_names()[name]) {
+          count = this.material_names()[name];
         }
         mat_data.push(count);
       }

@@ -58,7 +58,7 @@ class Item
       materialByTier[item.tierTypeName()].push(item.itemName())
     materialByTier
 
-  csv: (stats_header, material_names)->
+  csv: (stats_header, material_name_list)->
     item_csv = [@data.itemName(), @data.itemTypeName(), @data.tierTypeName(), @data.qualityLevel() ]
     stat_csv = []
     for stat in stats_header
@@ -71,10 +71,10 @@ class Item
     for perk in @instance.perks()
       perk_string += "#{@json.Response.definitions.perks[perk.perkHash()].displayName()}\n"
     mat_data = []
-    for name in material_names
+    for name in material_name_list
       count = 0
-      if @material_names[name]
-        count = @material_names[name]()
+      if @material_names()[name]
+        count = @material_names()[name]
       mat_data.push(count)
     string = item_csv.concat(stat_csv, ["\"#{perk_string}\""], mat_data).join()
     string

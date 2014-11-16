@@ -54,13 +54,12 @@ Make pretty
 
 Better vendor vault detection
 
-CSV
-
-
 Versions
 ====================
 ```
-- 20141107 
+- 20141116
+-- disply csv data
+- 20141107
 -- New CSS
 -- itemsCSV() method
 - 20141106

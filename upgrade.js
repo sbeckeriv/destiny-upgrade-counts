@@ -99,7 +99,7 @@
       _ref = this.json.Response.data.materialItemHashes();
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         hash = _ref[_i];
-        item = json.Response.definitions.items[hash];
+        item = this.json.Response.definitions.items[hash];
         materialByTier[_name = item.tierTypeName()] || (materialByTier[_name] = []);
         materialByTier[item.tierTypeName()].push(item.itemName());
       }
@@ -260,37 +260,13 @@
               csv.push(item.csv(stats_header, mat_names));
             }
           }
-          return csv;
+          return csv.join("\n");
         };
       })(this));
     }
 
     Upgrader.prototype.total_object = function() {
       return this.totals();
-    };
-
-    Upgrader.prototype.itemsCSV = function() {
-      var csv, data, header, id, item, mat_names, stats_header, _i, _len, _ref, _ref1;
-      header = ["Name", "Type", "Tier", "Quality Level"];
-      stats_header = [];
-      _ref = DEFS.stats;
-      for (id in _ref) {
-        data = _ref[id];
-        stats_header.push(parseInt(id, 10));
-        header.push(data.statName);
-      }
-      mat_names = this.totals().names();
-      header.push("Perks");
-      header = header.concat(mat_names);
-      csv = [header.join()];
-      _ref1 = this.items();
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        item = _ref1[_i];
-        if (["BUCKET_SPECIAL_WEAPON", "BUCKET_HEAVY_WEAPON", "BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier()) >= 0) {
-          csv.push(item.csv(stats_header, mat_names));
-        }
-      }
-      return csv;
     };
 
     Upgrader.prototype.processVault = function() {
@@ -440,7 +416,8 @@
       secondary: '#2D3137',
       tertiary: '#393F45'
     };
-    $(".nav_top").append("<style> .upgrader { width: 300px; min-height: 10px; max-height: 550px; clear: left; background-color: " + colors.primary + "; color: #fff; padding: 0 .5em; overflow-x: auto; border-bottom: " + colors.primary + " solid 1px; border-radius: 0 0 0 5px; } .upgrader .header { height: 20px; padding: .5em 0; } .upgrader .header span { cursor: pointer; float: left; } .upgrader .header label { float: right; } .upgrader .totals { background: " + colors.secondary + "; border-radius: 5px; padding: .5em; } .upgrader .item { background: " + colors.secondary + "; border-radius: 5px; margin:.5em 0; } .upgrader .item span { padding: .25em .5em; display: inline-block; } .upgrader .item ul { background: " + colors.tertiary + "; border-radius: 0 0 5px 5px; padding:.25em .5em; } </style> <li class='upgrader'> <div class='header'> <!-- ko ifnot: error --> <span onclick='$(\"#upgrader-data\").toggle();return false;'> UPGRADES </span> <label> <input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' /> <!-- ko ifnot: vaultLoaded()--> Click Gear for Vault <!-- /ko --> <!-- ko if: vaultLoaded()--> Include Vault <!-- /ko --> </label> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <ul> <li class='item'> <span>Total counts(owned)</span> <ul class='totals' data-bind='foreach: totals().list()'> <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li> </ul> </li> </ul> <ul class='item-totals' data-bind='foreach: items'> <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) --> <li class='item'> <span data-bind='text: displayName()'></span> <ul data-bind='foreach: material_array()'> <li data-bind=\"text: name+': '+total\"></li> </ul> </li> <!-- /ko --> </ul> </span> </li>");
+    $(".nav_top").append("<style> .upgrader { width: 300px; min-height: 10px; max-height: 550px; clear: left; background-color: " + colors.primary + "; color: #fff; padding: 0 .5em; overflow-x: auto; border-bottom: " + colors.primary + " solid 1px; border-radius: 0 0 0 5px; } .upgrader .header { height: 20px; padding: .5em 0; } .upgrader .header span { cursor: pointer; float: left; } .upgrader .header label { float: right; } .upgrader .totals { background: " + colors.secondary + "; border-radius: 5px; padding: .5em; } .upgrader .item { background: " + colors.secondary + "; border-radius: 5px; margin:.5em 0; } .upgrader .item span { padding: .25em .5em; display: inline-block; } .upgrader .item ul { background: " + colors.tertiary + "; border-radius: 0 0 5px 5px; padding:.25em .5em; } </style> <li class='upgrader'> <div class='header'> <!-- ko ifnot: error --> <span onclick='$(\"#upgrader-data\").toggle();return false;'> UPGRADES </span> <label> <input type='checkbox' data-bind='checked: displayVault, attr: {disabled: !vaultLoaded()}' /> <!-- ko ifnot: vaultLoaded()--> Click Gear for Vault <!-- /ko --> <!-- ko if: vaultLoaded()--> Include Vault <!-- /ko --> </label> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='ifnot: error'> <ul> <li class='item'> <span>Total counts(owned)</span> <ul class='totals' data-bind='foreach: totals().list()'> <li data-bind=\"text: $data[0]+': '+$data[1]+'('+$parent.ownedTotals.count($data[0])+')'\"></li> </ul> </li> </ul> <ul class='item-totals' data-bind='foreach: items'> <!-- ko if:(material_array()[0] && ($parent.displayVault() || !vault())) --> <li class='item'> <span data-bind='text: displayName()'></span> <ul data-bind='foreach: material_array()'> <li data-bind=\"text: name+': '+total\"></li> </ul> </li> <!-- /ko --> </ul> <span onclick='$(\"#upgrader-data\").hide();$(\"#itemsCSV\").show();return false;'> CSV -> </span> </span> <span id='itemsCSV'> <span onclick='$(\"#upgrader-data\").show();$(\"#itemsCSV\").hide();return false;'> <- Back to Display </span> <pre data-bind='text: itemsCSV()'></pre> </span> </li>");
+    $('#itemsCSV').hide();
     ko.applyBindings(window.upgrader, $('.upgrader')[0]);
   }
 

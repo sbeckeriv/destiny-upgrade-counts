@@ -52,7 +52,7 @@ class Item
     #memoize
     materialByTier = {}
     for hash in @json.Response.data.materialItemHashes()
-      item = json.Response.definitions.items[hash]
+      item = @json.Response.definitions.items[hash]
       materialByTier[item.tierTypeName()] or= []
       materialByTier[item.tierTypeName()].push(item.itemName())
     materialByTier
@@ -139,25 +139,10 @@ class Upgrader
       for item in @items()
         if ["BUCKET_SPECIAL_WEAPON","BUCKET_HEAVY_WEAPON","BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier())>=0
           csv.push(item.csv(stats_header, mat_names))
-      csv
+      csv.join("\n")
     )
   total_object: ->
     @totals()
-
-  itemsCSV: ->
-    header = ["Name", "Type", "Tier", "Quality Level"]
-    stats_header = []
-    for id, data of DEFS.stats
-      stats_header.push(parseInt(id,10))
-      header.push(data.statName)
-    mat_names = @totals().names()
-    header.push("Perks")
-    header = header.concat(mat_names)
-    csv = [header.join()]
-    for item in @items()
-      if ["BUCKET_SPECIAL_WEAPON","BUCKET_HEAVY_WEAPON","BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier())>=0
-        csv.push(item.csv(stats_header, mat_names))
-    csv
 
   processVault: ->
     vendor_id = null
@@ -315,8 +300,18 @@ unless $('.upgrader')[0]
         <!-- /ko -->
       </ul>
 
+      <span onclick='$(\"#upgrader-data\").hide();$(\"#itemsCSV\").show();return false;'>
+        CSV ->
+      </span>
     </span>
-
+    <span id='itemsCSV'>
+      <span onclick='$(\"#upgrader-data\").show();$(\"#itemsCSV\").hide();return false;'>
+        <- Back to Display
+      </span>
+      <pre data-bind='text: itemsCSV()'></pre>
+    </span>
   </li>")
+  $('#itemsCSV').hide()
   #bind my object to my new dom element
   ko.applyBindings(window.upgrader, $('.upgrader')[0])
+

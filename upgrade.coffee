@@ -68,8 +68,13 @@ class Item
       else
         stat_csv[stats_header.indexOf(stat)] = ""
     perk_string = ""
+    first = true
     for perk in @instance.perks()
-      perk_string += "#{@json.Response.definitions.perks[perk.perkHash()].displayName()}\n"
+      unless first
+        perk_string += ", "
+      perk_string += "#{@json.Response.definitions.perks[perk.perkHash()].displayName()}"
+      first = false
+
     mat_data = []
     for name in material_name_list
       count = 0
@@ -138,7 +143,7 @@ class Upgrader
       header = header.concat(mat_names)
       csv = [header.join()]
       for item in @items()
-        if ["BUCKET_SPECIAL_WEAPON","BUCKET_HEAVY_WEAPON","BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier())>=0
+        if ["BUCKET_HEAD", "BUCKET_ARMS", "BUCKET_CHEST", "BUCKET_LEGS","BUCKET_VAULT_ARMOR", "BUCKET_VAULT_WEAPONS", "BUCKET_SPECIAL_WEAPON","BUCKET_HEAVY_WEAPON","BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier())>=0
           csv.push(item.csv(stats_header, mat_names))
       csv.join("\n")
     )

@@ -107,7 +107,7 @@
     };
 
     Item.prototype.csv = function(stats_header, material_name_list) {
-      var count, found_stat, instace_stat, item_csv, mat_data, name, perk, perk_string, stat, stat_csv, string, _i, _j, _k, _len, _len1, _len2, _ref;
+      var count, first, found_stat, instace_stat, item_csv, mat_data, name, perk, perk_string, stat, stat_csv, string, _i, _j, _k, _len, _len1, _len2, _ref;
       item_csv = [this.data.itemName(), this.data.itemTypeName(), this.data.tierTypeName(), this.data.qualityLevel()];
       stat_csv = [];
       for (_i = 0, _len = stats_header.length; _i < _len; _i++) {
@@ -131,10 +131,15 @@
         }
       }
       perk_string = "";
+      first = true;
       _ref = this.instance.perks();
       for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
         perk = _ref[_j];
-        perk_string += "" + (this.json.Response.definitions.perks[perk.perkHash()].displayName()) + "\n";
+        if (!first) {
+          perk_string += ", ";
+        }
+        perk_string += "" + (this.json.Response.definitions.perks[perk.perkHash()].displayName());
+        first = false;
       }
       mat_data = [];
       for (_k = 0, _len2 = material_name_list.length; _k < _len2; _k++) {
@@ -256,7 +261,7 @@
           _ref1 = _this.items();
           for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
             item = _ref1[_i];
-            if (["BUCKET_SPECIAL_WEAPON", "BUCKET_HEAVY_WEAPON", "BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier()) >= 0) {
+            if (["BUCKET_HEAD", "BUCKET_ARMS", "BUCKET_CHEST", "BUCKET_LEGS", "BUCKET_VAULT_ARMOR", "BUCKET_VAULT_WEAPONS", "BUCKET_SPECIAL_WEAPON", "BUCKET_HEAVY_WEAPON", "BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier()) >= 0) {
               csv.push(item.csv(stats_header, mat_names));
             }
           }

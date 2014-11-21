@@ -107,11 +107,12 @@ class Totals
       @names.push(name)
 
 class Upgrader
-  baseInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/1/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true"
-  vaultInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/1/MyAccount/Character/CHARACTER_ID_SUB/Vendor/VENDOR_ID/?lc=en&fmt=true&lcin=true&definitions=true"
+  baseInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true"
+  vaultInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/MyAccount/Character/CHARACTER_ID_SUB/Vendor/VENDOR_ID/?lc=en&fmt=true&lcin=true&definitions=true"
   constructor: ->
     @accountID = null
     @characterID = null
+    @accountType = null
     @items = ko.observableArray()
     @totals = ko.computed =>
       total = new Totals
@@ -158,7 +159,7 @@ class Upgrader
     if vendor_id
       clearInterval(@venderTimeout)
       @vaultLoaded(true)
-      url = @vaultInventoryUrl.replace("CHARACTER_ID_SUB", @characterID).replace("VENDOR_ID", vendor_id)
+      url = @vaultInventoryUrl.replace("CHARACTER_ID_SUB", @characterID).replace("VENDOR_ID", vendor_id).replace("ACCOUNT_TYPE_SUB", @accountType)
       $.ajax({
         url: url, type: "GET",
         beforeSend: (xhr) ->
@@ -193,12 +194,13 @@ class Upgrader
 
   setIDs: ->
     #simple regex.
-    matches = window.location.pathname.match(/(.+)\/(\d+)\/(\d+)/)
-    @accountID = matches[2]
-    @characterID = matches[3]
+    matches = window.location.pathname.match(/(.+)(\d+)\/(\d+)\/(\d+)/)
+    @accountType = matches[2]
+    @accountID = matches[3]
+    @characterID = matches[4]
 
   addItem: (iiid, base_object) =>
-    url = @baseInventoryUrl.replace("ACCOUNT_ID_SUB", @accountID).replace("CHARACTER_ID_SUB", @characterID).replace("IIID_SUB", iiid)
+    url = @baseInventoryUrl.replace("ACCOUNT_ID_SUB", @accountID).replace("CHARACTER_ID_SUB", @characterID).replace("IIID_SUB", iiid).replace("ACCOUNT_TYPE_SUB", @accountType)
 
     $.ajax({
       url: url, type: "GET",

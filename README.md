@@ -53,6 +53,11 @@ Better vendor vault detection
 Versions
 ====================
 ```
+- 20141121
+-- Support account types
+- 20141119
+-- change \n for , in csv
+-- include gear and vault in csv
 - 20141116
 -- disply csv data
 -- fix count

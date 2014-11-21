@@ -199,15 +199,16 @@
   })();
 
   Upgrader = (function() {
-    Upgrader.prototype.baseInventoryUrl = window.location.protocol + "//www.bungie.net/Platform/Destiny/1/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true";
+    Upgrader.prototype.baseInventoryUrl = window.location.protocol + "//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true";
 
-    Upgrader.prototype.vaultInventoryUrl = window.location.protocol + "//www.bungie.net/Platform/Destiny/1/MyAccount/Character/CHARACTER_ID_SUB/Vendor/VENDOR_ID/?lc=en&fmt=true&lcin=true&definitions=true";
+    Upgrader.prototype.vaultInventoryUrl = window.location.protocol + "//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/MyAccount/Character/CHARACTER_ID_SUB/Vendor/VENDOR_ID/?lc=en&fmt=true&lcin=true&definitions=true";
 
     function Upgrader() {
       this.addItem = __bind(this.addItem, this);
       var error;
       this.accountID = null;
       this.characterID = null;
+      this.accountType = null;
       this.items = ko.observableArray();
       this.totals = ko.computed((function(_this) {
         return function() {
@@ -287,7 +288,7 @@
       if (vendor_id) {
         clearInterval(this.venderTimeout);
         this.vaultLoaded(true);
-        url = this.vaultInventoryUrl.replace("CHARACTER_ID_SUB", this.characterID).replace("VENDOR_ID", vendor_id);
+        url = this.vaultInventoryUrl.replace("CHARACTER_ID_SUB", this.characterID).replace("VENDOR_ID", vendor_id).replace("ACCOUNT_TYPE_SUB", this.accountType);
         return $.ajax({
           url: url,
           type: "GET",
@@ -379,14 +380,15 @@
 
     Upgrader.prototype.setIDs = function() {
       var matches;
-      matches = window.location.pathname.match(/(.+)\/(\d+)\/(\d+)/);
-      this.accountID = matches[2];
-      return this.characterID = matches[3];
+      matches = window.location.pathname.match(/(.+)(\d+)\/(\d+)\/(\d+)/);
+      this.accountType = matches[2];
+      this.accountID = matches[3];
+      return this.characterID = matches[4];
     };
 
     Upgrader.prototype.addItem = function(iiid, base_object) {
       var url;
-      url = this.baseInventoryUrl.replace("ACCOUNT_ID_SUB", this.accountID).replace("CHARACTER_ID_SUB", this.characterID).replace("IIID_SUB", iiid);
+      url = this.baseInventoryUrl.replace("ACCOUNT_ID_SUB", this.accountID).replace("CHARACTER_ID_SUB", this.characterID).replace("IIID_SUB", iiid).replace("ACCOUNT_TYPE_SUB", this.accountType);
       return $.ajax({
         url: url,
         type: "GET",

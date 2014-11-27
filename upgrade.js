@@ -205,11 +205,33 @@
 
     function Upgrader() {
       this.addItem = __bind(this.addItem, this);
-      var error;
       this.accountID = null;
-      this.characterID = null;
+      this.characterID = ko.observable(null);
       this.accountType = null;
+      this.pageLoading = ko.observable(false);
       this.items = ko.observableArray();
+      this.ownedTotals = new Totals;
+      this.vaultLoaded = ko.observable(false);
+      this.displayVault = ko.observable(false);
+      this.error = ko.observable(false);
+      this.setIDs();
+      setInterval((function(_this) {
+        return function() {
+          var loading;
+          loading = bnet._pageController.isLoadingPage;
+          if (loading !== _this.pageLoading()) {
+            return _this.pageLoading(loading);
+          }
+        };
+      })(this), 500);
+      this.pageLoadingChange = ko.computed((function(_this) {
+        return function() {
+          if (!_this.pageLoading()) {
+            _this.setIDs();
+            return _this.reset();
+          }
+        };
+      })(this));
       this.totals = ko.computed((function(_this) {
         return function() {
           var count, item, name, total, _i, _len, _ref, _ref1;
@@ -228,22 +250,6 @@
           return total;
         };
       })(this));
-      this.ownedTotals = new Totals;
-      this.setIDs();
-      this.vaultLoaded = ko.observable(false);
-      this.displayVault = ko.observable(false);
-      this.error = ko.observable(false);
-      try {
-        this.processItems();
-        this.venderTimeout = setInterval((function(_this) {
-          return function() {
-            return _this.processVault();
-          };
-        })(this), 600);
-      } catch (_error) {
-        error = _error;
-        this.error("There was a problem loading the site: " + error);
-      }
       this.itemsCSV = ko.computed((function(_this) {
         return function() {
           var csv, data, header, id, item, mat_names, stats_header, _i, _len, _ref, _ref1;
@@ -271,6 +277,26 @@
       })(this));
     }
 
+    Upgrader.prototype.reset = function() {
+      var error;
+      this.items([]);
+      this.ownedTotals = new Totals;
+      this.vaultLoaded(false);
+      this.displayVault(false);
+      this.error(false);
+      try {
+        this.processItems();
+        return this.venderTimeout = setInterval((function(_this) {
+          return function() {
+            return _this.processVault();
+          };
+        })(this), 600);
+      } catch (_error) {
+        error = _error;
+        return this.error("There was a problem loading the site: " + error);
+      }
+    };
+
     Upgrader.prototype.total_object = function() {
       return this.totals();
     };
@@ -288,7 +314,7 @@
       if (vendor_id) {
         clearInterval(this.venderTimeout);
         this.vaultLoaded(true);
-        url = this.vaultInventoryUrl.replace("CHARACTER_ID_SUB", this.characterID).replace("VENDOR_ID", vendor_id).replace("ACCOUNT_TYPE_SUB", this.accountType);
+        url = this.vaultInventoryUrl.replace("CHARACTER_ID_SUB", this.characterID()).replace("VENDOR_ID", vendor_id).replace("ACCOUNT_TYPE_SUB", this.accountType);
         return $.ajax({
           url: url,
           type: "GET",
@@ -383,12 +409,12 @@
       matches = window.location.pathname.match(/(.+)(\d+)\/(\d+)\/(\d+)/);
       this.accountType = matches[2];
       this.accountID = matches[3];
-      return this.characterID = matches[4];
+      return this.characterID(matches[4]);
     };
 
     Upgrader.prototype.addItem = function(iiid, base_object) {
       var url;
-      url = this.baseInventoryUrl.replace("ACCOUNT_ID_SUB", this.accountID).replace("CHARACTER_ID_SUB", this.characterID).replace("IIID_SUB", iiid).replace("ACCOUNT_TYPE_SUB", this.accountType);
+      url = this.baseInventoryUrl.replace("ACCOUNT_ID_SUB", this.accountID).replace("CHARACTER_ID_SUB", this.characterID()).replace("IIID_SUB", iiid).replace("ACCOUNT_TYPE_SUB", this.accountType);
       return $.ajax({
         url: url,
         type: "GET",

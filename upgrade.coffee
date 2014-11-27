@@ -111,27 +111,35 @@ class Upgrader
   vaultInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/MyAccount/Character/CHARACTER_ID_SUB/Vendor/VENDOR_ID/?lc=en&fmt=true&lcin=true&definitions=true"
   constructor: ->
     @accountID = null
-    @characterID = null
+    @characterID = ko.observable(null)
     @accountType = null
+    @pageLoading= ko.observable(false)
     @items = ko.observableArray()
+    @ownedTotals = new Totals
+    @vaultLoaded = ko.observable(false) # can be computed if any items have vault
+    @displayVault = ko.observable(false)
+    @error = ko.observable(false)
+
+    @setIDs()
+    setInterval(=>
+      loading = bnet._pageController.isLoadingPage
+      if loading != @pageLoading()
+        @pageLoading(loading)
+    , 500)
+
+    @pageLoadingChange = ko.computed =>
+      #if the value changes from from true to false
+      #the page should be done loading.
+      if !@pageLoading()
+        @setIDs()
+        @reset()
+
     @totals = ko.computed =>
       total = new Totals
       for item in @items() when @displayVault() || !item.vault()
         for name, count of item.material_names()
           total.add(name,count)
       total
-    @ownedTotals = new Totals
-    @setIDs()
-    @vaultLoaded = ko.observable(false) # can be computed if any items have vault
-    @displayVault = ko.observable(false)
-    @error = ko.observable(false)
-    try
-      @processItems()
-      @venderTimeout = setInterval(=>
-        @processVault()
-      , 600)
-    catch error
-      @error("There was a problem loading the site: #{error}")
 
     @itemsCSV = ko.computed( ()=>
       header = ["Name", "Type", "Tier", "Quality Level"]
@@ -148,6 +156,22 @@ class Upgrader
           csv.push(item.csv(stats_header, mat_names))
       csv.join("\n")
     )
+
+  reset: ->
+    @items([])
+    @ownedTotals = new Totals
+    @vaultLoaded(false)
+    @displayVault(false)
+    @error(false)
+    try
+      @processItems()
+      @venderTimeout = setInterval(=>
+        @processVault()
+      , 600)
+    catch error
+      @error("There was a problem loading the site: #{error}")
+
+
   total_object: ->
     @totals()
 
@@ -159,7 +183,7 @@ class Upgrader
     if vendor_id
       clearInterval(@venderTimeout)
       @vaultLoaded(true)
-      url = @vaultInventoryUrl.replace("CHARACTER_ID_SUB", @characterID).replace("VENDOR_ID", vendor_id).replace("ACCOUNT_TYPE_SUB", @accountType)
+      url = @vaultInventoryUrl.replace("CHARACTER_ID_SUB", @characterID()).replace("VENDOR_ID", vendor_id).replace("ACCOUNT_TYPE_SUB", @accountType)
       $.ajax({
         url: url, type: "GET",
         beforeSend: (xhr) ->
@@ -197,10 +221,10 @@ class Upgrader
     matches = window.location.pathname.match(/(.+)(\d+)\/(\d+)\/(\d+)/)
     @accountType = matches[2]
     @accountID = matches[3]
-    @characterID = matches[4]
+    @characterID(matches[4])
 
   addItem: (iiid, base_object) =>
-    url = @baseInventoryUrl.replace("ACCOUNT_ID_SUB", @accountID).replace("CHARACTER_ID_SUB", @characterID).replace("IIID_SUB", iiid).replace("ACCOUNT_TYPE_SUB", @accountType)
+    url = @baseInventoryUrl.replace("ACCOUNT_ID_SUB", @accountID).replace("CHARACTER_ID_SUB", @characterID()).replace("IIID_SUB", iiid).replace("ACCOUNT_TYPE_SUB", @accountType)
 
     $.ajax({
       url: url, type: "GET",

@@ -53,6 +53,8 @@ Better vendor vault detection
 Versions
 ====================
 ```
+- 20141127
+-- reset data on new page load
 - 20141121
 -- Support account types
 - 20141119

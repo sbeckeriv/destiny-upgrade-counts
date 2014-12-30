@@ -19,6 +19,15 @@ class Item
       group
     )
 
+    @getStat = (statName) ->
+      if @instance.stats?
+        for stat in @instance.stats()
+          if DEFS.stats[stat.statHash()].statName == statName
+            return stat
+        return undefined
+      else
+        undefined
+
     @material_names = ko.computed( =>
       clean_list = {}
       #count for each material
@@ -65,8 +74,14 @@ class Item
       upgrader.damageTypes[@instance.damageType()]
     else
       ""
+
+  primaryStat: ->
+    if @instance.primaryStat?
+      @instance.primaryStat.value()
+    else
+      ""
   csv: (stats_header, material_name_list)->
-    item_csv = [@data.itemName(), @damageType(), @data.itemTypeName(), @data.tierTypeName(), @data.qualityLevel() ]
+    item_csv = [@data.itemName(), @damageType(), @data.itemTypeName(), @data.tierTypeName(), @data.qualityLevel(), @primaryStat()]
     stat_csv = []
     for stat in stats_header
       found_stat = (instace_stat for instace_stat in  @instance.stats() when instace_stat.statHash() == stat)[0]
@@ -87,6 +102,7 @@ class Item
       if @material_names()[name]
         count = @material_names()[name]
       mat_data.push(count)
+
     string = item_csv.concat(stat_csv, ["\"#{perk_string}\""], mat_data).join()
     string
 
@@ -151,7 +167,7 @@ class Upgrader
       total
 
     @itemsCSV = ko.computed( ()=>
-      header = ["Name", "Damage", "Type", "Tier", "Quality Level"]
+      header = ["Name", "Damage", "Type", "Tier", "Quality Level", "Primary Stat"]
       stats_header = []
       for id, data of DEFS.stats
         stats_header.push(parseInt(id,10))

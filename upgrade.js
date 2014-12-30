@@ -30,6 +30,21 @@
           return group;
         };
       })(this));
+      this.getStat = function(statName) {
+        var stat, _i, _len, _ref;
+        if (this.instance.stats != null) {
+          _ref = this.instance.stats();
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            stat = _ref[_i];
+            if (DEFS.stats[stat.statHash()].statName === statName) {
+              return stat;
+            }
+          }
+          return void 0;
+        } else {
+          return void 0;
+        }
+      };
       this.material_names = ko.computed((function(_this) {
         return function() {
           var clean_list, m, ms, name, total, _i, _len, _ref;
@@ -114,9 +129,17 @@
       }
     };
 
+    Item.prototype.primaryStat = function() {
+      if (this.instance.primaryStat != null) {
+        return this.instance.primaryStat.value();
+      } else {
+        return "";
+      }
+    };
+
     Item.prototype.csv = function(stats_header, material_name_list) {
       var count, first, found_stat, instace_stat, item_csv, mat_data, name, perk, perk_string, stat, stat_csv, string, _i, _j, _k, _len, _len1, _len2, _ref;
-      item_csv = [this.data.itemName(), this.damageType(), this.data.itemTypeName(), this.data.tierTypeName(), this.data.qualityLevel()];
+      item_csv = [this.data.itemName(), this.damageType(), this.data.itemTypeName(), this.data.tierTypeName(), this.data.qualityLevel(), this.primaryStat()];
       stat_csv = [];
       for (_i = 0, _len = stats_header.length; _i < _len; _i++) {
         stat = stats_header[_i];
@@ -268,7 +291,7 @@
       this.itemsCSV = ko.computed((function(_this) {
         return function() {
           var csv, data, header, id, item, mat_names, stats_header, _i, _len, _ref1, _ref2;
-          header = ["Name", "Damage", "Type", "Tier", "Quality Level"];
+          header = ["Name", "Damage", "Type", "Tier", "Quality Level", "Primary Stat"];
           stats_header = [];
           _ref1 = DEFS.stats;
           for (id in _ref1) {

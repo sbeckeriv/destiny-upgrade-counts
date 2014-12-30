@@ -82,7 +82,7 @@
 
     Item.prototype.displayName = function() {
       var name;
-      name = "" + (this.data.itemName()) + ": " + (this.bucket.bucketName());
+      name = "" + (this.data.itemName()) + " " + (this.damageType()) + ": " + (this.bucket.bucketName());
       if (this.vault()) {
         name += " Vault";
       }
@@ -106,9 +106,17 @@
       return materialByTier;
     };
 
+    Item.prototype.damageType = function() {
+      if ((this.instance.damageType != null) && upgrader.damageTypes[this.instance.damageType()] !== "None") {
+        return upgrader.damageTypes[this.instance.damageType()];
+      } else {
+        return "";
+      }
+    };
+
     Item.prototype.csv = function(stats_header, material_name_list) {
       var count, first, found_stat, instace_stat, item_csv, mat_data, name, perk, perk_string, stat, stat_csv, string, _i, _j, _k, _len, _len1, _len2, _ref;
-      item_csv = [this.data.itemName(), this.data.itemTypeName(), this.data.tierTypeName(), this.data.qualityLevel()];
+      item_csv = [this.data.itemName(), this.damageType(), this.data.itemTypeName(), this.data.tierTypeName(), this.data.qualityLevel()];
       stat_csv = [];
       for (_i = 0, _len = stats_header.length; _i < _len; _i++) {
         stat = stats_header[_i];
@@ -205,6 +213,7 @@
 
     function Upgrader() {
       this.addItem = __bind(this.addItem, this);
+      var damage, index, _ref;
       this.accountID = null;
       this.characterID = ko.observable(null);
       this.accountType = null;
@@ -214,6 +223,12 @@
       this.vaultLoaded = ko.observable(false);
       this.displayVault = ko.observable(false);
       this.error = ko.observable(false);
+      this.damageTypes = new Array(Object.keys(Globals.DamageType).length);
+      _ref = Globals.DamageType;
+      for (damage in _ref) {
+        index = _ref[damage];
+        this.damageTypes[index] = damage;
+      }
       this.setIDs();
       setInterval((function(_this) {
         return function() {
@@ -234,15 +249,15 @@
       })(this));
       this.totals = ko.computed((function(_this) {
         return function() {
-          var count, item, name, total, _i, _len, _ref, _ref1;
+          var count, item, name, total, _i, _len, _ref1, _ref2;
           total = new Totals;
-          _ref = _this.items();
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            item = _ref[_i];
+          _ref1 = _this.items();
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            item = _ref1[_i];
             if (_this.displayVault() || !item.vault()) {
-              _ref1 = item.material_names();
-              for (name in _ref1) {
-                count = _ref1[name];
+              _ref2 = item.material_names();
+              for (name in _ref2) {
+                count = _ref2[name];
                 total.add(name, count);
               }
             }
@@ -252,12 +267,12 @@
       })(this));
       this.itemsCSV = ko.computed((function(_this) {
         return function() {
-          var csv, data, header, id, item, mat_names, stats_header, _i, _len, _ref, _ref1;
-          header = ["Name", "Type", "Tier", "Quality Level"];
+          var csv, data, header, id, item, mat_names, stats_header, _i, _len, _ref1, _ref2;
+          header = ["Name", "Damage", "Type", "Tier", "Quality Level"];
           stats_header = [];
-          _ref = DEFS.stats;
-          for (id in _ref) {
-            data = _ref[id];
+          _ref1 = DEFS.stats;
+          for (id in _ref1) {
+            data = _ref1[id];
             stats_header.push(parseInt(id, 10));
             header.push(data.statName);
           }
@@ -265,9 +280,9 @@
           header.push("Perks");
           header = header.concat(mat_names);
           csv = [header.join()];
-          _ref1 = _this.items();
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            item = _ref1[_i];
+          _ref2 = _this.items();
+          for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+            item = _ref2[_i];
             if (["BUCKET_HEAD", "BUCKET_ARMS", "BUCKET_CHEST", "BUCKET_LEGS", "BUCKET_VAULT_ARMOR", "BUCKET_VAULT_WEAPONS", "BUCKET_SPECIAL_WEAPON", "BUCKET_HEAVY_WEAPON", "BUCKET_PRIMARY_WEAPON"].indexOf(item.bucket.bucketIdentifier()) >= 0) {
               csv.push(item.csv(stats_header, mat_names));
             }

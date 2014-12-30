@@ -42,10 +42,12 @@ class Item
       if item[key]
         (items[item[key]] or= []).push item
     items
+
   displayName: ->
-    name = "#{@data.itemName()}: #{@bucket.bucketName()}"
+    name = "#{@data.itemName()} #{@damageType()}: #{@bucket.bucketName()}"
     name += " Vault" if @vault()
     name
+
   check_vault: ->
     !@vault()
 
@@ -58,8 +60,13 @@ class Item
       materialByTier[item.tierTypeName()].push(item.itemName())
     materialByTier
 
+  damageType: ->
+    if @instance.damageType?  && upgrader.damageTypes[@instance.damageType()] != "None"
+      upgrader.damageTypes[@instance.damageType()]
+    else
+      ""
   csv: (stats_header, material_name_list)->
-    item_csv = [@data.itemName(), @data.itemTypeName(), @data.tierTypeName(), @data.qualityLevel() ]
+    item_csv = [@data.itemName(), @damageType(), @data.itemTypeName(), @data.tierTypeName(), @data.qualityLevel() ]
     stat_csv = []
     for stat in stats_header
       found_stat = (instace_stat for instace_stat in  @instance.stats() when instace_stat.statHash() == stat)[0]
@@ -74,7 +81,6 @@ class Item
         perk_string += ", "
       perk_string += "#{@json.Response.definitions.perks[perk.perkHash()].displayName()}"
       first = false
-
     mat_data = []
     for name in material_name_list
       count = 0
@@ -119,6 +125,9 @@ class Upgrader
     @vaultLoaded = ko.observable(false) # can be computed if any items have vault
     @displayVault = ko.observable(false)
     @error = ko.observable(false)
+    @damageTypes =  new Array(Object.keys(Globals.DamageType).length)
+    for damage, index of Globals.DamageType
+      @damageTypes[index] = damage
 
     @setIDs()
     setInterval(=>
@@ -142,7 +151,7 @@ class Upgrader
       total
 
     @itemsCSV = ko.computed( ()=>
-      header = ["Name", "Type", "Tier", "Quality Level"]
+      header = ["Name", "Damage", "Type", "Tier", "Quality Level"]
       stats_header = []
       for id, data of DEFS.stats
         stats_header.push(parseInt(id,10))

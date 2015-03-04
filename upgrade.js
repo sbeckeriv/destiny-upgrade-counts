@@ -403,41 +403,27 @@
     };
 
     Upgrader.prototype.processItems = function() {
-      var bucket, data, item, name, object, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _results;
-      _ref = tempModel.inventory.buckets.Equippable;
+      var data, item, object, _i, _len, _ref, _results;
+      _ref = tempModel.equippables;
+      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         item = _ref[_i];
-        _ref1 = item.items;
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          object = _ref1[_j];
-          data = DEFS["items"][object.itemHash];
-          this.addItem(object.itemInstanceId, {
-            "vault": false,
-            "instance": object,
-            "data": data,
-            "bucket": DEFS['buckets'][data.bucketTypeHash]
-          });
-        }
-      }
-      _ref2 = tempModel.inventory.buckets.Item;
-      _results = [];
-      for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
-        bucket = _ref2[_k];
-        if (DEFS.buckets[bucket.bucketHash].bucketIdentifier === "BUCKET_MATERIALS") {
-          _results.push((function() {
-            var _l, _len3, _ref3, _results1;
-            _ref3 = bucket.items;
-            _results1 = [];
-            for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
-              item = _ref3[_l];
-              name = DEFS["items"][item.itemHash].itemName;
-              _results1.push(this.ownedTotals.add(name, item.stackSize));
-            }
-            return _results1;
-          }).call(this));
-        } else {
-          _results.push(void 0);
-        }
+        _results.push((function() {
+          var _j, _len1, _ref1, _results1;
+          _ref1 = item.items;
+          _results1 = [];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            object = _ref1[_j];
+            data = DEFS["items"][object.itemHash];
+            _results1.push(this.addItem(object.itemInstanceId, {
+              "vault": false,
+              "instance": object,
+              "data": data,
+              "bucket": DEFS['buckets'][data.bucketTypeHash]
+            }));
+          }
+          return _results1;
+        }).call(this));
       }
       return _results;
     };

@@ -230,16 +230,17 @@ class Upgrader
 
   processItems: ->
     # use bungie js model to key the values. Just a double loop of arrays
-    for item in tempModel.inventory.buckets.Equippable
+    for item in tempModel.equippables
       for object in item.items
         data = DEFS["items"][object.itemHash]
         @addItem(object.itemInstanceId, {"vault": false, "instance": object, "data": data, "bucket": DEFS['buckets'][data.bucketTypeHash]})
     #equipped only
-    for bucket in tempModel.inventory.buckets.Item
-      if DEFS.buckets[bucket.bucketHash].bucketIdentifier == "BUCKET_MATERIALS"
-        for item in bucket.items
-          name = DEFS["items"][item.itemHash].itemName
-          @ownedTotals.add(name, item.stackSize)
+    #
+    #for bucket in tempModel.inventory.buckets.Item
+    #  if DEFS.buckets[bucket.bucketHash].bucketIdentifier == "BUCKET_MATERIALS"
+    #    for item in bucket.items
+    #      name = DEFS["items"][item.itemHash].itemName
+    #      @ownedTotals.add(name, item.stackSize)
 
   setIDs: ->
     #simple regex.

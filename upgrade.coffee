@@ -130,7 +130,7 @@ class Totals
 
 class Upgrader
   baseInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true"
-  vaultInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/MyAccount/Character/CHARACTER_ID_SUB/Vendor/VENDOR_ID/?lc=en&fmt=true&lcin=true&definitions=true"
+  vaultInventoryUrl: window.location.protocol+"//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/MyAccount/Vault/?lc=en&fmt=true&lcin=true&definitions=true"
   constructor: ->
     @accountID = null
     @characterID = ko.observable(null)
@@ -201,32 +201,29 @@ class Upgrader
     @totals()
 
   processVault: ->
-    vendor_id = null
-    if DEFS.vendorDetails
-      for id, obj of DEFS.vendorDetails
-        vendor_id = id
-    if vendor_id
-      clearInterval(@venderTimeout)
-      @vaultLoaded(true)
-      url = @vaultInventoryUrl.replace("CHARACTER_ID_SUB", @characterID()).replace("VENDOR_ID", vendor_id).replace("ACCOUNT_TYPE_SUB", @accountType)
-      $.ajax({
-        url: url, type: "GET",
-        beforeSend: (xhr) ->
-          #setup headers
-          #Accept Might not be needed. I noticed this was used in the bungie requests
-          xhr.setRequestHeader('Accept', "application/json, text/javascript, */*; q=0.01")
-          #This are mostly auth headers. API token and other needed values.
-          for key,value of bungieNetPlatform.getHeaders()
-            xhr.setRequestHeader(key, value)
-      }).done (item_json) =>
-        for bucket in item_json["Response"]["data"]["inventoryBuckets"]
-          for item in bucket.items
-            datas = item_json["Response"]["definitions"]["items"][item.itemHash]
-            if @ownedTotals[datas.itemName]
-              @ownedTotals.add(datas.itemName, item.stackSize)
+    clearInterval(@venderTimeout)
+    @vaultLoaded(true)
+    url = @vaultInventoryUrl.replace("ACCOUNT_TYPE_SUB", @accountType)
+    console.log(url)
+    $.ajax({
+      url: url, type: "GET",
+      beforeSend: (xhr) ->
+        #setup headers
+        #Accept Might not be needed. I noticed this was used in the bungie requests
+        xhr.setRequestHeader('Accept', "application/json, text/javascript, */*; q=0.01")
+        #This are mostly auth headers. API token and other needed values.
+        for key,value of bungieNetPlatform.getHeaders()
+          xhr.setRequestHeader(key, value)
+    }).error( (self, stat, message) =>
+    ).done (item_json) =>
+      console.log(item_json)
+      for bucket in item_json["Response"]["data"]["buckets"]
+        for item in bucket.items
+          datas = item_json["Response"]["definitions"]["items"][item.itemHash]
+          if @ownedTotals[datas.itemName]
+            @ownedTotals.add(datas.itemName, item.stackSize)
 
-            @addItem(item.itemInstanceId, {"vault": true, "data": datas, "instance":item, "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]})
-    else
+          @addItem(item.itemInstanceId, {"vault": true, "data": datas, "instance":item, "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]})
 
   processItems: ->
     # use bungie js model to key the values. Just a double loop of arrays

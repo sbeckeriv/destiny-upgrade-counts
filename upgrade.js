@@ -232,7 +232,7 @@
   Upgrader = (function() {
     Upgrader.prototype.baseInventoryUrl = window.location.protocol + "//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/Account/ACCOUNT_ID_SUB/Character/CHARACTER_ID_SUB/Inventory/IIID_SUB/?lc=en&fmt=true&lcin=true&definitions=true";
 
-    Upgrader.prototype.vaultInventoryUrl = window.location.protocol + "//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/MyAccount/Character/CHARACTER_ID_SUB/Vendor/VENDOR_ID/?lc=en&fmt=true&lcin=true&definitions=true";
+    Upgrader.prototype.vaultInventoryUrl = window.location.protocol + "//www.bungie.net/Platform/Destiny/ACCOUNT_TYPE_SUB/MyAccount/Vault/?lc=en&fmt=true&lcin=true&definitions=true";
 
     function Upgrader() {
       this.addItem = __bind(this.addItem, this);
@@ -340,66 +340,58 @@
     };
 
     Upgrader.prototype.processVault = function() {
-      var id, obj, url, vendor_id, _ref;
-      vendor_id = null;
-      if (DEFS.vendorDetails) {
-        _ref = DEFS.vendorDetails;
-        for (id in _ref) {
-          obj = _ref[id];
-          vendor_id = id;
-        }
-      }
-      if (vendor_id) {
-        clearInterval(this.venderTimeout);
-        this.vaultLoaded(true);
-        url = this.vaultInventoryUrl.replace("CHARACTER_ID_SUB", this.characterID()).replace("VENDOR_ID", vendor_id).replace("ACCOUNT_TYPE_SUB", this.accountType);
-        return $.ajax({
-          url: url,
-          type: "GET",
-          beforeSend: function(xhr) {
-            var key, value, _ref1, _results;
-            xhr.setRequestHeader('Accept', "application/json, text/javascript, */*; q=0.01");
-            _ref1 = bungieNetPlatform.getHeaders();
-            _results = [];
-            for (key in _ref1) {
-              value = _ref1[key];
-              _results.push(xhr.setRequestHeader(key, value));
-            }
-            return _results;
+      var url;
+      clearInterval(this.venderTimeout);
+      this.vaultLoaded(true);
+      url = this.vaultInventoryUrl.replace("ACCOUNT_TYPE_SUB", this.accountType);
+      console.log(url);
+      return $.ajax({
+        url: url,
+        type: "GET",
+        beforeSend: function(xhr) {
+          var key, value, _ref, _results;
+          xhr.setRequestHeader('Accept', "application/json, text/javascript, */*; q=0.01");
+          _ref = bungieNetPlatform.getHeaders();
+          _results = [];
+          for (key in _ref) {
+            value = _ref[key];
+            _results.push(xhr.setRequestHeader(key, value));
           }
-        }).done((function(_this) {
-          return function(item_json) {
-            var bucket, datas, item, _i, _len, _ref1, _results;
-            _ref1 = item_json["Response"]["data"]["inventoryBuckets"];
-            _results = [];
-            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-              bucket = _ref1[_i];
-              _results.push((function() {
-                var _j, _len1, _ref2, _results1;
-                _ref2 = bucket.items;
-                _results1 = [];
-                for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-                  item = _ref2[_j];
-                  datas = item_json["Response"]["definitions"]["items"][item.itemHash];
-                  if (this.ownedTotals[datas.itemName]) {
-                    this.ownedTotals.add(datas.itemName, item.stackSize);
-                  }
-                  _results1.push(this.addItem(item.itemInstanceId, {
-                    "vault": true,
-                    "data": datas,
-                    "instance": item,
-                    "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]
-                  }));
+          return _results;
+        }
+      }).error((function(_this) {
+        return function(self, stat, message) {};
+      })(this)).done((function(_this) {
+        return function(item_json) {
+          var bucket, datas, item, _i, _len, _ref, _results;
+          console.log(item_json);
+          _ref = item_json["Response"]["data"]["buckets"];
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            bucket = _ref[_i];
+            _results.push((function() {
+              var _j, _len1, _ref1, _results1;
+              _ref1 = bucket.items;
+              _results1 = [];
+              for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+                item = _ref1[_j];
+                datas = item_json["Response"]["definitions"]["items"][item.itemHash];
+                if (this.ownedTotals[datas.itemName]) {
+                  this.ownedTotals.add(datas.itemName, item.stackSize);
                 }
-                return _results1;
-              }).call(_this));
-            }
-            return _results;
-          };
-        })(this));
-      } else {
-
-      }
+                _results1.push(this.addItem(item.itemInstanceId, {
+                  "vault": true,
+                  "data": datas,
+                  "instance": item,
+                  "bucket": item_json["Response"]["definitions"]["buckets"][bucket.bucketHash]
+                }));
+              }
+              return _results1;
+            }).call(_this));
+          }
+          return _results;
+        };
+      })(this));
     };
 
     Upgrader.prototype.processItems = function() {

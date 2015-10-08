@@ -42,7 +42,7 @@
             _ref = _this.have();
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               have_item = _ref[_i];
-              if (have_item["title"] === item["title"] && have_item["requirements"].match("1/1")) {
+              if (have_item["title"] === item["title"] && (have_item["requirements"].match("1/1") || have_item["requirements"].match("2/2"))) {
                 found = true;
               }
             }

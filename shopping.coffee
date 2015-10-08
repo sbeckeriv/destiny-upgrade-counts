@@ -25,7 +25,7 @@ class Shopper
       @selling().filter( (item, index) =>
         found = false
         for have_item in @have()
-          if have_item["title"] == item["title"] && have_item["requirements"].match("1/1") # figure out 2/2 later
+          if have_item["title"] == item["title"] && (have_item["requirements"].match("1/1") || have_item["requirements"].match("2/2")) # figure out 3/3 later
             found = true
         !found
       )

@@ -15,6 +15,8 @@ class Shopper
       2244880194: "Ship"
       44395194: "Sparrow"
       3301500998: "Emblem"
+      2668878854: "Vanguard Quartermaster"
+      3658200622: "Crucible Quartermaster"
     @setIDs()
     setInterval(=>
       loading = bnet._pageController.isLoadingPage
@@ -86,10 +88,11 @@ class Shopper
 
   processItems: =>
     #outfitter, shipwright
-    for vendor in [134701236,459708109]
+    for vendor in [134701236,459708109, 3658200622, 2668878854]
       @getHtml(vendor, (html,v) =>
         j = $(html)
         for item in $.makeArray(j.find(".destiny-icon-item"))
+
           item_object = {}
           item_object["vendor_name"] = @vendor_names[v]
           item_object["title"] =@scrub_csv($(item).find(".standardTitle").text())
@@ -97,7 +100,8 @@ class Shopper
           item_object["requirements"] = @scrub_csv($(item).find(".requirements").text())
           item_object["tier"] = @scrub_csv($(item).find(".itemSubtitle .tierTypeName").text())
           item_object["failure"] = @scrub_csv($(item).find(".vendorFailureReasons").text())
-          @selling.push(item_object)
+          if item_object["type"]=="Vehicle" || item_object["type"]=="Ship" || item_object["type"]=="Emblem" ||item_object["type"]=="Armor Shader"
+            @selling.push(item_object)
       )
     #shader, ships, sparrows, emblems
     for vendor in [2420628997, 2244880194, 44395194, 3301500998]
@@ -111,7 +115,8 @@ class Shopper
           item_object["requirements"] = @scrub_csv($(item).find(".requirements").text())
           item_object["tier"] = @scrub_csv($(item).find(".itemSubtitle .tierTypeName").text())
           item_object["failure"] = @scrub_csv($(item).find(".vendorFailureReasons").text())
-          @have.push(item_object)
+          if item_object["type"]=="Vehicle" || item_object["type"]=="Ship" || item_object["type"]=="Emblem" ||item_object["type"]=="Armor Shader"
+            @have.push(item_object)
       )
 
   setIDs: ->

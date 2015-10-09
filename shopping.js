@@ -22,7 +22,9 @@
         2420628997: "Shader",
         2244880194: "Ship",
         44395194: "Sparrow",
-        3301500998: "Emblem"
+        3301500998: "Emblem",
+        2668878854: "Vanguard Quartermaster",
+        3658200622: "Crucible Quartermaster"
       };
       this.setIDs();
       setInterval((function(_this) {
@@ -134,7 +136,7 @@
 
     Shopper.prototype.processItems = function() {
       var vendor, _i, _j, _len, _len1, _ref, _ref1, _results;
-      _ref = [134701236, 459708109];
+      _ref = [134701236, 459708109, 3658200622, 2668878854];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         vendor = _ref[_i];
         this.getHtml(vendor, (function(_this) {
@@ -152,7 +154,11 @@
               item_object["requirements"] = _this.scrub_csv($(item).find(".requirements").text());
               item_object["tier"] = _this.scrub_csv($(item).find(".itemSubtitle .tierTypeName").text());
               item_object["failure"] = _this.scrub_csv($(item).find(".vendorFailureReasons").text());
-              _results.push(_this.selling.push(item_object));
+              if (item_object["type"] === "Vehicle" || item_object["type"] === "Ship" || item_object["type"] === "Emblem" || item_object["type"] === "Armor Shader") {
+                _results.push(_this.selling.push(item_object));
+              } else {
+                _results.push(void 0);
+              }
             }
             return _results;
           };
@@ -177,7 +183,11 @@
               item_object["requirements"] = _this.scrub_csv($(item).find(".requirements").text());
               item_object["tier"] = _this.scrub_csv($(item).find(".itemSubtitle .tierTypeName").text());
               item_object["failure"] = _this.scrub_csv($(item).find(".vendorFailureReasons").text());
-              _results1.push(_this.have.push(item_object));
+              if (item_object["type"] === "Vehicle" || item_object["type"] === "Ship" || item_object["type"] === "Emblem" || item_object["type"] === "Armor Shader") {
+                _results1.push(_this.have.push(item_object));
+              } else {
+                _results1.push(void 0);
+              }
             }
             return _results1;
           };

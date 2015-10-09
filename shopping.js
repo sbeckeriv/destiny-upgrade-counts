@@ -36,18 +36,35 @@
       })(this), 500);
       this.buy_list = ko.computed((function(_this) {
         return function() {
-          return _this.selling().filter(function(item, index) {
-            var found, have_item, _i, _len, _ref;
+          var found, have_item, item, list, _i, _j, _len, _len1, _ref, _ref1;
+          list = [];
+          _ref = _this.selling();
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            item = _ref[_i];
             found = false;
-            _ref = _this.have();
-            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-              have_item = _ref[_i];
+            _ref1 = _this.have();
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              have_item = _ref1[_j];
               if (have_item["title"] === item["title"] && (have_item["requirements"].match("1/1") || have_item["requirements"].match("2/2"))) {
                 found = true;
               }
             }
-            return !found;
+            if (!found) {
+              list.push(item);
+            }
+          }
+          return _this.group_by(list, "vendor_name");
+        };
+      })(this));
+      this.buy_types = ko.computed((function(_this) {
+        return function() {
+          var list, names;
+          names = [];
+          list = _this.selling().filter(function(item, index) {
+            names.push(item["vendor_name"]);
+            return false;
           });
+          return jQuery.unique(names);
         };
       })(this));
       this.scrub_csv = function(e) {
@@ -83,7 +100,23 @@
         }
       }).error((function(_this) {
         return function(self, stat, message) {};
-      })(this)).done(caller);
+      })(this)).done((function(_this) {
+        return function(html) {
+          return caller(html, vendor_id);
+        };
+      })(this));
+    };
+
+    Shopper.prototype.group_by = function(array, key) {
+      var item, items, _i, _len, _name;
+      items = {};
+      for (_i = 0, _len = array.length; _i < _len; _i++) {
+        item = array[_i];
+        if (item[key]) {
+          (items[_name = item[key]] || (items[_name] = [])).push(item);
+        }
+      }
+      return items;
     };
 
     Shopper.prototype.reset = function() {
@@ -105,7 +138,7 @@
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         vendor = _ref[_i];
         this.getHtml(vendor, (function(_this) {
-          return function(html) {
+          return function(html, v) {
             var item, item_object, j, _j, _len1, _ref1, _results;
             j = $(html);
             _ref1 = $.makeArray(j.find(".destiny-icon-item"));
@@ -113,8 +146,9 @@
             for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
               item = _ref1[_j];
               item_object = {};
-              item_object["vendor_id"] = vendor;
+              item_object["vendor_name"] = _this.vendor_names[v];
               item_object["title"] = _this.scrub_csv($(item).find(".standardTitle").text());
+              item_object["type"] = _this.scrub_csv($(item).find(".standardDesc  :first-child").text());
               item_object["requirements"] = _this.scrub_csv($(item).find(".requirements").text());
               item_object["tier"] = _this.scrub_csv($(item).find(".itemSubtitle .tierTypeName").text());
               item_object["failure"] = _this.scrub_csv($(item).find(".vendorFailureReasons").text());
@@ -129,7 +163,7 @@
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         vendor = _ref1[_j];
         _results.push(this.getHtml(vendor, (function(_this) {
-          return function(html) {
+          return function(html, v) {
             var item, item_object, j, _k, _len2, _ref2, _results1;
             j = $(html);
             _ref2 = $.makeArray(j.find(".destiny-icon-item"));
@@ -137,8 +171,9 @@
             for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
               item = _ref2[_k];
               item_object = {};
-              item_object["vendor_id"] = vendor;
+              item_object["vendor_name"] = _this.vendor_names[v];
               item_object["title"] = _this.scrub_csv($(item).find(".standardTitle").text());
+              item_object["type"] = _this.scrub_csv($(item).find(".standardDesc  :first-child").text());
               item_object["requirements"] = _this.scrub_csv($(item).find(".requirements").text());
               item_object["tier"] = _this.scrub_csv($(item).find(".itemSubtitle .tierTypeName").text());
               item_object["failure"] = _this.scrub_csv($(item).find(".vendorFailureReasons").text());
@@ -171,7 +206,7 @@
       secondary: '#2D3137',
       tertiary: '#393F45'
     };
-    $(".nav_top").append("<style> .upgrader { width: 300px; min-height: 10px; max-height: 550px; clear: left; background-color: " + colors.primary + "; color: #fff; padding: 0 .5em; overflow-x: auto; border-bottom: " + colors.primary + " solid 1px; border-radius: 0 0 0 5px; float: right; height: auto !important; } .upgrader .header { height: 20px; padding: .5em 0; } .upgrader .header span { cursor: pointer; float: left; } .upgrader .header label { float: right; } .upgrader .item { background: " + colors.secondary + "; border-radius: 5px; margin:.5em 0; } .upgrader .item span { padding: .25em .5em; display: inline-block; } .upgrader .item ul { background: " + colors.tertiary + "; border-radius: 0 0 5px 5px; padding:.25em .5em; } </style> <li class='upgrader'> <div class='header'> <!-- ko ifnot: error --> <span onclick='$(\"#upgrader-data\").toggle();return false;'> Shopping list </span> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data'> <ul data-bind='foreach: buy_list'> <li data-bind=\"text: title\"></li> </ul> </span> </li>");
+    $(".nav_top").append("<style> .upgrader { width: 300px; min-height: 10px; max-height: 550px; clear: left; background-color: " + colors.primary + "; color: #fff; padding: 0 .5em; overflow-x: auto; border-bottom: " + colors.primary + " solid 1px; border-radius: 0 0 0 5px; float: right; height: auto !important; } .upgrader .header { height: 20px; padding: .5em 0; } .upgrader .header span { cursor: pointer; float: left; } .upgrader .header label { float: right; } .upgrader .item { background: " + colors.secondary + "; border-radius: 5px; margin:.5em 0; } .upgrader .item-header { padding: .25em .5em; display: inline-block; } .upgrader .item ul { background: " + colors.tertiary + "; border-radius: 0 0 5px 5px; padding:.25em .5em; } </style> <li class='upgrader'> <div class='header'> <!-- ko ifnot: error --> <span onclick='$(\"#upgrader-data\").toggle();return false;'> Shopping list </span> <!-- /ko --> <!-- ko if: error --> <span data-bind='text: error'></span> <!-- /ko --> </div> <span id='upgrader-data' data-bind='foreach: buy_types'> <!-- ko if: $parent.buy_list()[$data] --> <span data-bind='text: $data' class='item-header'/> <ul data-bind='foreach: $parent.buy_list()[$data]'> <li data-bind=\"text: type +': '+title\" class='item'></li> </ul> <!-- /ko --> </span> </li>");
     ko.applyBindings(window.upgrader, $('.upgrader')[0]);
   }
 

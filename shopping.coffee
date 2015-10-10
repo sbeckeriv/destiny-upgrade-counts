@@ -28,7 +28,7 @@ class Shopper
       for item in @selling()
         found = false
         for have_item in @have()
-          if have_item["title"] == item["title"] && (have_item["requirements"].match("1/1") || have_item["requirements"].match("2/2")) # figure out 3/3 later
+          if have_item["title"] == item["title"] && (have_item["requirements"].match("1/1") || have_item["requirements"].match("2/2")|| have_item["requirements"]=="") # figure out 3/3 later
             found = true
         if !found
           list.push item

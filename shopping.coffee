@@ -17,6 +17,9 @@ class Shopper
       3301500998: "Emblem"
       2668878854: "Vanguard Quartermaster"
       3658200622: "Crucible Quartermaster"
+      1998812735: "Variks (Reef)"
+      1410745145: "Petra (Reef)"
+
     @setIDs()
     setInterval(=>
       loading = bnet._pageController.isLoadingPage

@@ -138,7 +138,7 @@
 
     Shopper.prototype.processItems = function() {
       var vendor, _i, _j, _len, _len1, _ref, _ref1, _results;
-      _ref = [134701236, 459708109, 3658200622, 2668878854];
+      _ref = [134701236, 459708109, 3658200622, 2668878854, 1998812735, 1410745145];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         vendor = _ref[_i];
         this.getHtml(vendor, (function(_this) {

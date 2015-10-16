@@ -91,7 +91,7 @@ class Shopper
 
   processItems: =>
     #outfitter, shipwright
-    for vendor in [134701236,459708109, 3658200622, 2668878854]
+    for vendor in [134701236,459708109, 3658200622, 2668878854, 1998812735, 1410745145]
       @getHtml(vendor, (html,v) =>
         j = $(html)
         for item in $.makeArray(j.find(".destiny-icon-item"))

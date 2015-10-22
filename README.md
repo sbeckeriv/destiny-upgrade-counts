@@ -1,3 +1,16 @@
+
+Bookmarklet to display shopping list
+======================
+
+I cant figure out how to create the link with markdown. Sorry.
+Create a new bookmark. Use this as your url:
+```
+javascript:(function(){s=document.createElement('script');s.type='text/javascript';s.src='//sbeckeriv.github.io/destiny-upgrade-counts/upgrade.js?v='+parseInt(Math.random()*99999999);document.body.appendChild(s);})();
+```
+On a character click the bookmark. A smart cookie can figure out how to
+update the grease monkey below.
+
+
 Bookmarklet to display upgrade material counts on the character page.
 ======================
 

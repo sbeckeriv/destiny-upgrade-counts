@@ -10,6 +10,25 @@ javascript:(function(){s=document.createElement('script');s.type='text/javascrip
 On a character click the bookmark. A smart cookie can figure out how to
 update the grease monkey below.
 
+Greesemonkey or tampermonkey script
+Thanks solrac214
+```
+// ==UserScript==
+// @name         Bungie Shopping list
+// @namespace    http://BungieGear/
+// @version      0.1
+// @description  Hope this helps ! :D
+// @author       You
+// @include      https://www.bungie.net/*
+// @include      http://www.bungie.net/*
+// @grant        none
+// ==/UserScript==
+
+s=document.createElement('script');
+ s.type='text/javascript';
+ s.src='//sbeckeriv.github.io/destiny-upgrade-counts/shopping.js?v='+parseInt(Math.random()*99999999);
+ document.body.appendChild(s);
+```
 
 Bookmarklet to display upgrade material counts on the character page.
 ======================
